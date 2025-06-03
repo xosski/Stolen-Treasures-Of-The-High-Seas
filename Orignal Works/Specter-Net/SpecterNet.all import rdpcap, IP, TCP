@@ -1,0 +1,44 @@
+from scapy.all import rdpcap, IP, TCP
+
+def extract_fragment(pkt):
+    if IP in pkt and TCP in pkt:
+        # Example: We'll extract a byte from the TCP window field
+        window_val = pkt[TCP].window
+        ip_id = pkt[IP].id
+        seq = pkt[TCP].seq
+
+        # Simulate the embedded payload being the window size's lowest byte
+        data_byte = window_val & 0xFF
+        return (ip_id, seq, data_byte)
+    return None
+
+def reconstruct_message(pcap_path):
+    packets = rdpcap(pcap_path)
+    fragments = []
+
+    for pkt in packets:
+        result = extract_fragment(pkt)
+        if result:
+            ip_id, seq, byte = result
+            fragments.append((ip_id, seq, byte))
+
+    # Sort fragments by ip_id or seq for reassembly
+    fragments.sort(key=lambda x: x[0])  # Change to x[1] if seq-based
+
+    message_bytes = bytes([frag[2] for frag in fragments])
+    try:
+        message = message_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        message = message_bytes.hex()
+
+    return message
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: python specter_rebuilder.py <path_to_pcap>")
+        sys.exit(1)
+
+    hidden_message = reconstruct_message(sys.argv[1])
+    print("🕸 Reconstructed Hidden Message:")
+    print(hidden_message)
