@@ -1,0 +1,19 @@
+# How many threads do you want to run?
+threads: 500
+
+# If the proxy is banned, how many times should the checker retry with a new proxy?
+retries: 8
+
+show_only_hits: false
+
+proxy_type: http
+
+# milliseconds (1000 milliseconds: 1 second)
+proxy_timeout: 5000
+    
+# Proxy API URL
+# Leave empty if you want to load proxies from a file
+proxy_url: https://api.proxyscrape.com/v2/?request=getproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all
+
+# Time to refresh the proxies using API in milliseconds if you are using proxy api
+proxy_refresh: 30000

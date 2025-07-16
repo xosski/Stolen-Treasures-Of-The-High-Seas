@@ -1,0 +1,65 @@
+!!!!!!!!! YOU NEED TO READ EULA AFTER USE THE SOFTWARE OR YOU MUST UNISTALL IT FROM YOUR STORAGE DEVICE !!!!!!!!
+
+- If you don't agree the Eula, you can't use the software.
+---------------------------------------------------------------------------
+			HOW TO GET MORE FREE TOOLS/UPDATES!
+---------------------------------------------------------------------------
+
+- Share this video/post to all your friends, also sub to channel for you can kno what i upload.
+- Giving me like/rep in cracked.to if you have account, it's really aprecciated for my part.
+- Joining to my 2 Telegram Channels, and discor server for you can know what happens. I'll put again here.
+
+
+- Telegram Channel #1: telegram.ultimategames.xyz or @psnultimate   (Here i upload all tools, do pools for see what next free tool you want, etc...)
+- Telegram Channel #2: blacklist.ultimategames.xyz or @cracking_blacklist (Blacklist for scammers, you can report them if you get scammed by someone, check who is scammer, etc...)
+- Discord Server: discord.ultimategames.xyz (Also here i'll upload some things free, etc...)
+
+If you preffer, with just join to my Telegram channels it's enough for i still doing more free checkers ^^
+
+PD: You saw any bug/problem on checker? Please report to my Discord server or my support bot! I want do better versions with less bugs, etc...
+- Telegram bot for report bugs: @ultimategames_support_bot
+---------------------------------------------------------------------------
+			    HOW TO USE THE CHECKER! 
+---------------------------------------------------------------------------
+
+You need to have downloaded Microsoft .NET Framework 4.6
+- Download link: https://dotnet.microsoft.com/download/dotnet-framework/thank-you/net46-web-installer
+
+
+Also you need to have Microsoft Visual C++ Librarys downloaded.
+- Download link: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
+
+
+- If you don't have the file "core.usdk", settings of checker won't be loaded and won't work!
+
+- If you get the error of "Invalid username", because you put username with less of 5 charachters, you need to remove
+  the file "login.usdk" and open checker again and put a valid username. That's all
+---------------------------------------------------------------------------
+		     HOW TO USE THE TELEGRAM HIT SENDER! 
+---------------------------------------------------------------------------
+
+First of all, you need to have the file of Telegram.txt on the same directory as checker file.
+
+Later we will create our Telegram bot for send all hits we get, to our channel.
+
+
+- First write to @BotFather and /start it and create the bot. Once you created it, should give you that: https://prnt.sc/11r3ae7
+- Once we have our bot created, we will create a channel and add our Telegram bot here. He should have admin permissions on channel, or won't work!
+- Now we have our bot on our channel where will send hits, should be like this: https://prnt.sc/11r3fzk - https://prnt.sc/11r3gft. Now we will send random message to channel.
+- Once we sent post message to our channel, we will forward this message to this bot @JsonDumpBot and we will get the chat id, remember to get the id of channel and not your account!. Example: https://prnt.sc/11r3jvm - https://prnt.sc/11r3lk3
+- Now we will fill the file "Telegram.txt" with this values we got. Example how should be: https://prnt.sc/11r3px5
+
+That's the message you should get if you did all good: https://prnt.sc/11r3zfg - https://prnt.sc/11r49bp
+---------------------------------------------------------------------------
+Please, join to my channels if you want more tools of this kind free, and leave/share i'll appreciate. ^^
+
+Don't fuck saying it's RAT/Virus, just it's the file protected that got detected as virus
+because can't see content. If you think it's RAT, use cleaned VPS/RDP/VM/Sandboxie or don't use it, it's easy.
+
+If i want i can do it, but i don't like to burn my reputation doing that stuff. 
+
+Thanks for understand :)
+
+Have good day.
+Att, Kirlyh
+---------------------------------------------------------------------------

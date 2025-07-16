@@ -1,0 +1,17 @@
+1
+#protocol=HTTP;
+#threads=100;
+#refreshrate=10;
+#webhook=https://api.proxyscrape.com/;
+#loghits=true;
+
+<<<<<<<<<<<<<<INFO>>>>>>>>>>>>>>>
+The "1" on the first line, indicates the minutes for the stats message to send. 
+1 = 1 min, so the message would be sent every 1 minute.
+
+if the loghits is true, you will get a message with the working account you just got (On your webhook)
+
+IMPORTANT: PLEASE ADD A WEBHOOK, I HAVEN'T TRIED WITHOUT ONE SO I DON'T KNOW THE ERRORS. ITS EASY TO ADD A WEBHOOK TO A DISCORD U OWN.
+
+Recommendation: I recommend creating a discord server, name it LOGS or Accounts if u want. Go to Server settings, integrationsm webhooks, create webhook, copy link, and paste it above.
+<<<<<<<<<<<<<<END>>>>>>>>>>>>>>>>

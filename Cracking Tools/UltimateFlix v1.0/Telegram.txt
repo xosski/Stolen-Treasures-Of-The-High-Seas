@@ -1,0 +1,2 @@
+bot_token:You need to add your Telegram bot token here, you need to put the word "bot" with the token. Example: botasd123
+chat_id:Add your channel/group id, don't forget to add the "-" if have it!

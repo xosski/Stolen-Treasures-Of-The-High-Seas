@@ -1,0 +1,1 @@
+When you use the program, you must deactivate the antivirus for its perfect operation, since windows defender gives a false positive

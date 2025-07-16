@@ -1,0 +1,10 @@
+THE SOFTWARE IS DISTRIBUTED "AS IS". NO WARRANTY OF ANY KIND IS EXPRESSED OR IMPLIED. 
+YOU USE AT YOUR OWN RISK. 
+NEITHER THE AUTHOR, THE LICENSOR NOR THE AGENTS OF THE LICENSOR WILL BE LIABLE FOR DATA LOSS, DAMAGES, LOSS OF PROFITS OR ANY OTHER KIND OF LOSS WHILE USING OR MISUSING THIS SOFTWARE OR ITS COMPONENTS. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY.
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Furthermore, the author and his ASSOCIATES shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss of any kind that may occure while using the SOFTWARE or its components.
+
+Installing and using the software signifies acceptance of these terms and conditions of the license. 
+If you do not agree with the terms of this license, you must remove all software files from your storage devices and cease to use the software.

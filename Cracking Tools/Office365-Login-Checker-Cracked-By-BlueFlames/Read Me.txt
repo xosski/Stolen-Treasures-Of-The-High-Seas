@@ -1,0 +1,18 @@
+Office365 Login Checker.
+
+I want to give an explanation of how the program works..
+
+It's optional with proxies which means you can add proxies if you want
+#socks5 preferably but you can change the proxy type and threads 
+in the Settings.yml file.
+
+So you have to extract your email,pass to be in email@site.com:password format.
+
+Put them in Accounts.txt and then run the program. You'll get the results in Accounts folder.
+
+My Contact:
+
+Jabber: lightangels007@jabber.ru
+ICQ: https://icq.im/726587079
+Telegram: https://t.me/lightangels007
+Email: lightangels007@yandex.com

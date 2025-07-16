@@ -1,0 +1,16 @@
+yahoo:pop.mail.yahoo.com:True:995
+gmail:pop.gmail.com:True:995
+hotmail.com:pop3.live.com:True:995
+live.com:pop3.live.com:True:995
+outlook.com:pop3.live.com:True:995
+aol:pop.aol.com:True:995
+mail.ru:pop.mail.ru:True:995
+rambler.ru:pop.rambler.ru:True:995
+21cn.com:pop.21cn.com:True:995
+sina.com:pop.sina.com:False:110
+list.ru:pop.mail.ru:True:995
+inbox.ru:pop.mail.ru:True:995
+mail.ua:pop.mail.ru:True:995
+bk.ru:pop.mail.ru:True:995
+rediffmail.com:pop.rediffmail.com:False:110
+gmx.com:pop.gmx.com:True:995

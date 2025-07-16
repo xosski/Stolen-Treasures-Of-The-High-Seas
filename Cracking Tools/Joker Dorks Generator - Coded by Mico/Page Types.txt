@@ -1,0 +1,15 @@
+category=
+ID=
+pageid=
+catalogid=
+page=
+cat=
+cid=
+ProductID=
+num=
+type=
+viewpage=
+gameID=
+item_id=
+id=
+name=

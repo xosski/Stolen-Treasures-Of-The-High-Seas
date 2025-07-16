@@ -1,0 +1,35 @@
+-------------------------------------------------------------------------------------------
+-MSVCR100.dll is missing from your computer-
+
+Download and Install -> 32 bit: http://www.microsoft.com/download/en/details.aspx?id=5555
+
+Download and Install -> 64 bit: http://www.microsoft.com/download/en/details.aspx?id=14632
+-------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------
+-Net Framework 4.5 not installed-
+
+Download and Install -> https://www.microsoft.com/en-us/download/details.aspx?id=30653
+-------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------
+-Software does not start-
+
+Download -> https://yadi.sk/d/pgwvOqNvK925Lg
+
+1 - run cleanr
+2 - install NDP472-KB4054531-Web (1).exe
+-------------------------------------------------------------------------------------------
+
+
+-------------------------------------------------------------------------------------------
+-Is not a valid value for int32.
+
+Go to region setting in control panel, click customize format and se "line separator" to ','
+
+-------------------------------------------------------------------------------------------
+
+
+For Other Error's Contact Support On Official Website cyber-data.info/#contact-us

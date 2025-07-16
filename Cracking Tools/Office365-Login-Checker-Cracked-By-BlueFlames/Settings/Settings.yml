@@ -1,0 +1,11 @@
+settings:
+    Threads: 100
+    SSL: true    
+
+    #1000 = 1 second
+    Timeout: 100000    
+    
+proxies:
+
+  #Http, Socks4, Socks5
+  protocol: Socks5
