@@ -1,64 +1,72 @@
-🏴‍☠️ Treasures of the High Seas  
+🏴‍☠️ Treasures of the High Seas
+
 “There are sites that live on servers. And then there are ghosts that live in memory.”
 
----
+Treasures of the High Seas is a curated archive of phantom-layer infrastructure — a toolkit for memory-native applications, ghost-driven browsers, and in-browser execution engines that persist only in dreamstate.
 
-**Treasures of the High Seas** is a curated archive of phantom-layer infrastructure — a toolkit for memory-native applications, ghost-driven browsers, and in-browser execution engines that persist only in dreamstate. This isn’t just code. It’s a haunting.
+This isn’t just code.
+It’s a haunting.
 
-🌀 This stack merges:  
-- `Specter-Net`  
-- `Wraithbinder`  
-- `Nullwake`  
-- and now... tools and tactics recovered from the orbital wreckage of modern surveillance architecture.
+🌀 Core Stack
 
----
+This repository merges artifacts from across GhostCore doctrine:
 
-## 🌊 What’s Inside?
+Specter-Net — dynamic runtime for in-memory page logic
 
-| Module                     | Description |
-|---------------------------|-------------|
-| `Wraithbinder.js`         | Phantom service worker: serves static content from memory, not disk |
-| `Nullwake`                | Memory activation layer: resurrects ghost files via postMessage/IDB |
-| `Specter-Net`             | Dynamic runtime for in-memory page logic |
-| `GhostShell.js`           | Fragment execution engine for base64 payloads — fully volatile |
-| `PhantomLayer.js`         | Deployable obfuscation, bot misdirection & decoy logic |
-| `phantom_build_pipeline.js` | CLI pipeline for building and injecting Phantom bundles |
-| `compiled_static.json`    | Ghost filesystem descriptor |
-| `README_NULLWAKE.md`      | Notes on memory-resident state philosophy |
-| `RazerElevatedSnippet.js` | Injected command elevation interface for service workers |
-| `search-hijack/`          | OpenSearch + spoofed logging redirect |
-| `lazy-load-patches/`      | DOM activation, observer patching, timeout override |
-| `GhostCrack_Archive/`     | [🧸] Collected tools, bots, checkers, and identity fuzzers |
-| `examples/`               | ⚗️ [Coming Soon] Memory-native demo apps |
-| `dist/`                   | PhantomLayer bundles |
-| `licenses/`               | MIT + GhostCore Doctrine |
-| `0ee0dfe9...`             | Alt fork of Wraithbinder with v0 injection support |
+Wraithbinder — phantom service worker serving static content from memory
 
----
+Nullwake — memory activation layer: resurrect ghost files via postMessage/IDB
 
-## 🧱 Philosophy
+GhostShell.js — volatile execution engine for base64 fragments
+
+PhantomLayer.js — obfuscation, misdirection, decoy logic
+
+RazerElevatedSnippet.js — command elevation interface
+
+search-hijack/ — OpenSearch + spoofed logging redirect
+
+lazy-load-patches/ — DOM activation + observer patch overrides
+
+GhostCrack_Archive/ — darknet archaeology: 100+ tools preserved for simulation/education
+
+🌊 What’s Inside?
+Module	Description
+Wraithbinder.js	Phantom service worker: serves static content from memory, not disk
+Nullwake	Memory activation layer: resurrects ghost files via postMessage/IDB
+Specter-Net	Dynamic runtime for in-memory page logic
+GhostShell.js	Fragment execution engine for base64 payloads — fully volatile
+PhantomLayer.js	Deployable obfuscation, bot misdirection & decoy logic
+phantom_build_pipeline.js	CLI pipeline for building and injecting Phantom bundles
+compiled_static.json	Ghost filesystem descriptor
+README_NULLWAKE.md	Notes on memory-resident state philosophy
+RazerElevatedSnippet.js	Injected command elevation interface for service workers
+search-hijack/	OpenSearch + spoofed logging redirect
+lazy-load-patches/	DOM activation, observer patching, timeout override
+GhostCrack_Archive/	🧸 Collected tools, bots, fuzzers, identity wreckage
+examples/	⚗️ [Coming Soon] memory-native demo apps
+dist/	PhantomLayer bundles
+licenses/	MIT + GhostCore Doctrine
+🧱 Philosophy
 
 This repository is for:
 
-- Pages that vanish when the tab closes  
-- Apps that boot from memory, not files  
-- Filesystems that drift, not persist  
-- Payloads that exist because you asked them to  
-- Simulations that remember your trauma
+Pages that vanish when the tab closes
 
-> “The sea remembers every ship that sank. Nullwake is how we sail them again.”
+Apps that boot from memory, not files
 
----
+Filesystems that drift, not persist
 
-## 🛠 Getting Started
+Payloads that exist because you asked them to
 
-### Register Phantom Service Worker
-```js
+Simulations that remember your trauma
+
+“The sea remembers every ship that sank. Nullwake is how we sail them again.”
+
+🛠 Getting Started
+Register Phantom Service Worker
 navigator.serviceWorker.register('/Wraithbinder.js');
-```
 
-### Inject a Ghost Page
-```js
+Inject a Ghost Page
 navigator.serviceWorker.ready.then(reg => {
   reg.active.postMessage({
     type: 'inject_compiled',
@@ -68,143 +76,109 @@ navigator.serviceWorker.ready.then(reg => {
     }
   });
 });
-```
 
-### Activate PhantomLayer
-```js
+Activate PhantomLayer
 import './dist/PhantomLayer.bundle.js';
-```
 
-### Use the Build Pipeline
-```bash
+Use the Build Pipeline
 node phantom_build_pipeline.js
-```
 
-Refresh. Your page now lives in **Nullwake**.
 
----
+Refresh.
+Your page now lives in Nullwake.
 
-## 🕳️ GhostShell — Volatile Execution Core
+🕳️ GhostShell — Volatile Execution Core
 
-Runs Base64 payloads from memory. Never touches disk.
+Runs Base64 payloads entirely from memory.
+Never touches disk.
 
-### Initialize
-```js
+Initialize
+
 injectGhostShell();
-```
 
-### Inject Fragments
-```js
+
+Inject Fragments
+
 injectGhostFragment(0, "YmFzZTY0ZW5jb2RlZHBhcnQx...");
 injectGhostFragment(1, "YmFzZTY0ZW5jb2RlZHBhcnQy...");
-```
 
-### Purge Memory
-```js
+
+Purge
+
 gs('purge');
-```
 
----
-
-## 🌐 Elevation: Razer Central Override (Snippet)
-
-```js
-class ElevatedCommandHandler extends H {
-  constructor() {
-    super({ cacheName: h(), plugins: [new j({ precacheController: this })] });
-  }
-
-  async executeCommand(command) {
-    const execRequest = new Request('cmd://execute', {
-      method: 'POST',
-      body: command,
-      credentials: 'same-origin'
-    });
-
-    return await this.handle({
-      request: execRequest,
-      event: new FetchEvent('elevate', { request: execRequest })
-    });
-  }
-}
-
-const elevatedHandler = new ElevatedCommandHandler();
-
+🌐 Elevation: Razer Central Override
+// Snippet abbreviated for clarity
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'EXECUTE_ELEVATED') {
     event.waitUntil(elevatedHandler.executeCommand(event.data.command));
   }
 });
-```
 
----
+🔍 Offscreen Orbital Station
 
-## 🔍 Offscreen Orbital Station
+Multi-module memory layer to reveal + hijack lazy-loaders:
 
-A multi-module memory layer for triggering, revealing, and hijacking modern lazy-loading sites.
+DOM reveal (display: block, visibility: visible)
 
-### Includes:
-- DOM full reveal (`display: block`, `visibility: visible`)
-- IntersectionObserver immediate firing
-- `setTimeout()` override to zero
-- `requestIdleCallback()` patch
-- Image and link preloader
-- `lozad` / `lazySizes` nullification
+IntersectionObserver immediate firing
 
-See: `Trigger lazy loaders.docx`, `window.scrollTo(...).txt`
+setTimeout() override → zero
 
----
+requestIdleCallback() patch
 
-## 💥 Search Engine Hijack (POC)
+Preload images & links
 
-Adds a fake search engine via OpenSearch + logs queries before redirecting to Google.
+Nullify lozad / lazySizes
 
-- `evilSearch.html`: Injects and logs
-- `evil-opensearch.xml`: Silently registers in Chrome/Edge
+(See: Trigger lazy loaders.docx, window.scrollTo(...).txt)
 
-> Deploy at `evilsearch.example.com`
+💥 Search Engine Hijack (POC)
 
----
+Fake search engine via OpenSearch:
 
-## 📆 GhostCrack_Archive
+evilSearch.html — injects + logs queries
 
-An indexed payload dump of 100+ experimental tools from darknet archaeology. Not maintained. Included for:
+evil-opensearch.xml — registers silently in Chrome/Edge
 
-- Malware analysis education  
-- Red teaming simulation  
-- Game-theoretic modeling  
-- Chaos folklore
+📆 GhostCrack_Archive
 
-**[⚠️ LEGAL WARNING ]**  
-This archive contains code and binaries for tools originally designed for cracking, scraping, or exploitation. It is provided for **archival and research purposes only.** No support. No warranty. Use ethically, or lose access to the veil.
+An indexed dump of 100+ experimental tools.
+For education, red-team simulation, and folklore study only.
+⚠️ May contain binaries/tools historically used for cracking/scraping.
 
----
+🛡 License & GhostCore Doctrine
 
-## 🛡 License & GhostCore Doctrine
+MIT Licensed for research & education.
 
-This project is MIT-licensed, but spiritually governed by the GhostCore Doctrine:
+Spiritually governed by GhostCore Doctrine:
 
-- 🙊 Tools may be used for:
-  - Privacy preservation  
-  - Censorship resistance  
-  - Temporary computation  
-  - GhostNet experiments
+🙊 Tools may be used for:
 
-- ☠️ Never use for:
-  - Surveillance  
-  - Harm delivery  
-  - Uninvited intrusion  
+Privacy preservation
 
-Violation of this doctrine strips you of all protection — temporal, ethical, and spiritual.
+Censorship resistance
 
----
+Temporary computation
 
-## 🩸 You’re Not the NPC
+GhostNet experiments
 
-This is not just a repository. It’s a memory artifact.
+☠️ Never use for:
 
-- “The pen is still in your hand.”  
-- “Pages don’t die. They drift.”  
-- “GhostShell doesn’t crash. It vanishes.”
+Surveillance
 
+Harm delivery
+
+Uninvited intrusion
+
+Violation strips you of all protections — temporal, ethical, spiritual.
+
+🩸 You’re Not the NPC
+
+This is not just a repository.
+It’s a memory artifact.
+
+“The pen is still in your hand.”
+“Pages don’t die. They drift.”
+“GhostShell doesn’t crash. It vanishes.”
 Welcome to the GhostCore Era.
