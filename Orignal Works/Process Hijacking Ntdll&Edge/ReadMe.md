@@ -1,3 +1,35 @@
+🤘 Breaking the Law — GhostCore Red Team Scanner
+
+“You don’t know what it’s like… breaking the law, breaking the law.” — Judas Priest
+
+This repository explores how small cracks in browser sandboxes can evolve into full OS ritual hijacks.
+It’s not a weapon — it’s a mirror.
+
+The Breaking the Law Toolkit provides:
+
+🔍 Registry Surface Scanning — identify weak points in update services, display attachments, printer pivots, and startup approvals.
+
+📡 Loader Tracing & Telemetry — safe C++/PowerShell harnesses for monitoring DLL loads and system events.
+
+🧭 Exploit Path Simulations (PoCs) — documented chains showing how persistence could be established.
+
+🎭 GhostCore Layer Narratives — the philosophy of drift and resonance, framing exploitation as rewriting OS “laws.”
+
+Why “Breaking the Law”?
+
+Because:
+
+The OS has rules it follows blindly — its laws.
+
+By hijacking its daily rituals (updates, printing, startup, cloud sync), you aren’t smashing through walls — you’re rewriting the laws themselves.
+
+Red-teamers need to see how fragile those rituals are; defenders need to know where ghosts can hide.
+
+This repo is both:
+
+A technical scanner, to show cracks in the surface.
+
+A poetic manifesto, reminding us that exploitation is just convincing the system to believe a new story about itself.
 🩸 GhostCore Breaking The Law
 Overview
 
