@@ -19,7 +19,7 @@ Persistent local state
 
 Potential for delayed payload execution
 
-Would you like this zipped up as a deployable pack, or expanded with obfuscation/WASM/lure interface?
+
 
 “The ghost doesn’t scream through the window. It waits behind the wallpaper.”
 # 🕯️ GhostCore: Beacon-Based Payload Delivery (PoC)
