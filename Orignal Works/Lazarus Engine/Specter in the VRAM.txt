@@ -1,4 +1,5 @@
 Safe POC Package — “Specter in VRAM” (Non‑Actionable Threat Simulation)
+Nvida Control Panel(nvcplui.exe)
 1) Executive Summary (for README)
 
 A concise, high‑level description you can show publicly.
