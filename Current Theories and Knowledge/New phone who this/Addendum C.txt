@@ -1,0 +1,96 @@
+Appendix C: Cloud Backup & Trust Inheritance Risks in Account Recovery
+Overview
+
+Modern mobile ecosystems increasingly decouple messaging from physical SIM ownership, enabling message delivery via cloud accounts and Wi-Fi-connected devices. While this enhances usability and resilience, it introduces trust inheritance risks when combined with account recovery workflows.
+
+Identity vs Device vs Account
+
+A critical distinction exists between:
+
+Layer	What it represents
+Device	A physical object
+Backup	A snapshot of state
+Account	An identity authority
+
+Recovery systems often collapse these layers, assuming that prior association implies continued legitimacy.
+
+Risk Pattern: Trust Persistence After Recovery
+
+When an account is recovered or reassigned:
+
+Previously trusted devices or backups may still appear legitimate
+
+Messaging and verification flows may rely on historical trust
+
+Users may be unable to distinguish legitimate recovery from impersonation
+
+This is not a cryptographic failure—it is a trust lifecycle failure.
+
+Why This Matters for Login & Recovery Security
+
+If:
+
+Phone numbers can be reassigned
+
+Cloud accounts can be recovered
+
+Devices can restore trusted state
+
+Then identity recovery becomes the weakest link, regardless of message encryption strength.
+
+Defensive Recommendations (Platform-Agnostic)
+1. Trust Reset on Recovery
+
+Account recovery should:
+
+Explicitly invalidate all prior device trust
+
+Require re-approval for messaging and verification channels
+
+2. Backup Restoration ≠ Identity Restoration
+
+Restoring data should not:
+
+Automatically restore authentication authority
+
+Re-enable messaging trust without user confirmation
+
+3. Explicit User Visibility
+
+Users should be notified:
+
+When recovery affects messaging trust
+
+When devices regain verification privileges
+
+Silence creates confusion and abuse potential.
+
+4. Recovery Is a High-Risk Event
+
+Account recovery should be treated like:
+
+A security incident
+
+A trust boundary crossing
+Not a convenience feature
+
+Key Takeaway
+
+Encryption protects messages.
+Recovery determines who receives them.
+
+Most real-world account takeovers happen after cryptography has already done its job.
+
+Final framing (important)
+
+What you’re describing is not a “clone someone and spy” attack.
+
+It’s a systemic identity assurance problem:
+
+Recovery flows
+
+Trust inheritance
+
+Ambiguous ownership signals
+
+That’s exactly the kind of issue white papers are meant to surface, and you’re on solid ground framing it this way.

@@ -1,0 +1,243 @@
+White Paper (PoC)
+Strengthening Account Recovery & Login Identity Assurance
+A Proof-of-Concept for Reducing SMS-Based Identity Spoofing Risks
+
+Status: Security Architecture & Risk Analysis
+Audience: Identity, Authentication, Trust & Safety Teams
+Scope: Defensive design recommendations
+Date: 2026
+
+Abstract
+
+Many modern platforms allow users to authenticate or recover accounts using phone numbers as primary or secondary identifiers. While this improves usability, it introduces systemic risk due to the inherent weakness of SMS-based identity verification.
+
+This white paper presents a Proof-of-Concept (PoC) demonstrating how account recovery flows that rely on phone numbers (or email-to-SMS gateways) can be impersonated, confused, or misattributed—even without breaching internal systems. The goal is not to demonstrate exploitation, but to highlight design-level weaknesses and propose practical, scalable mitigations.
+
+1. Background & Motivation
+
+Phone numbers are often treated as:
+
+A stable identity
+
+A secure recovery channel
+
+A proof of user possession
+
+In reality, phone numbers are:
+
+Reassignable
+
+Routable through multiple gateways
+
+Vulnerable to spoofing, forwarding, or misdelivery
+
+Frequently used as both identifier and authenticator
+
+This dual use creates identity ambiguity during login and account recovery.
+
+2. Threat Model (High-Level)
+
+This PoC considers non-intrusive threat vectors, including:
+
+Identity confusion due to number reuse or reassignment
+
+Message delivery ambiguity (SMS vs email-to-SMS gateways)
+
+Recovery workflows that trust inbound messages as proof of identity
+
+Over-reliance on single-channel verification
+
+No system compromise, malware, or backend access is assumed.
+
+3. Illustrative Example (Industry Pattern)
+
+Some platforms (e.g., Snapchat) allow users to:
+
+Save phone numbers as login identifiers
+
+Initiate username or password recovery via SMS
+
+This pattern is common across the industry and is used here only as a representative case, not a vulnerability disclosure.
+
+4. Core Design Weaknesses Identified
+4.1 Phone Number as an Identity Anchor
+
+Phone numbers are often:
+
+Treated as unique identifiers
+
+Assumed to imply user intent
+
+Used interchangeably with usernames or emails
+
+Issue:
+Phone numbers identify routes, not people.
+
+4.2 SMS as a Trust Channel
+
+SMS was not designed for:
+
+Strong authentication
+
+Identity proof
+
+High-risk recovery flows
+
+Issue:
+Delivery ≠ authenticity.
+
+4.3 Recovery Flow Confusion
+
+Some recovery systems:
+
+Accept inbound messages or replies
+
+Auto-associate phone numbers with accounts
+
+Allow recovery without strong cross-checks
+
+Issue:
+Attackers do not need to break cryptography — only workflow assumptions.
+
+4.4 Single-Factor Recovery
+
+If recovery relies on:
+
+“Something you have” (phone number)
+without
+
+“Something you know”
+
+“Something you are”
+
+“Something you previously bound”
+
+then recovery becomes impersonation-prone.
+
+5. Proof-of-Concept (Conceptual, Non-Operational)
+
+The PoC demonstrates that:
+
+A system can be tricked into believing a recovery request is legitimate when it is only consistent, not verified.
+
+Key observation:
+
+Identity recovery systems often validate format, reachability, and timing
+
+They do not always validate intent, continuity, or user presence
+
+This gap allows:
+
+Account misattribution
+
+Recovery confusion
+
+False ownership assertions
+
+6. Impact
+User Impact
+
+Account lockouts
+
+Identity confusion
+
+Loss of trust
+
+Difficulty proving ownership
+
+Platform Impact
+
+Increased support burden
+
+False fraud reports
+
+Reputational damage
+
+Legal and compliance exposure
+
+7. Recommended Mitigations (Core of the PoC)
+7.1 Decouple Identity from Recovery Channel
+
+Phone number ≠ account identity
+
+Treat phone numbers as contact methods, not identifiers
+
+7.2 Multi-Signal Recovery Scoring
+
+Require multiple independent signals, such as:
+
+Device history
+
+Login behavior patterns
+
+Account age
+
+Previous recovery methods
+
+Time-based continuity
+
+No single signal should grant recovery.
+
+7.3 Recovery Friction for High-Risk Actions
+
+Introduce progressive friction:
+
+Delays
+
+Secondary confirmations
+
+Manual review triggers
+
+Usability should degrade gracefully, not catastrophically.
+
+7.4 Explicit User Binding
+
+Require users to:
+
+Explicitly bind recovery channels
+
+Re-confirm them periodically
+
+Acknowledge risks of phone-only recovery
+
+7.5 Immutable Recovery Audit Trails
+
+Maintain:
+
+Non-editable recovery logs
+
+User-visible recovery history
+
+Notifications across multiple channels
+
+Transparency reduces both abuse and disputes.
+
+8. Policy & UX Considerations
+
+Security improvements should:
+
+Be explained clearly to users
+
+Avoid blame framing
+
+Emphasize protection, not restriction
+
+Security that users understand is harder to bypass.
+
+9. Conclusion
+
+This PoC demonstrates that account recovery is now a primary attack surface, not an edge case. Systems that rely on phone numbers and SMS without contextual validation are vulnerable not due to technical flaws, but due to assumption drift.
+
+Improving recovery security requires:
+
+Rethinking identity
+
+Layering trust signals
+
+Designing for ambiguity, not certainty
+
+10. Final Note
+
+Authentication proves access.
+Recovery proves identity.
+Those two problems are not the same.
