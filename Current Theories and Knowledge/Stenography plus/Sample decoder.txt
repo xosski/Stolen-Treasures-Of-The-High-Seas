@@ -1,0 +1,32 @@
+from PIL import Image
+
+# Define a "key" - mapping colors to characters
+COLOR_CODEBOOK = {
+    (255, 0, 0): 'H',     # Red = H
+    (0, 255, 0): 'e',     # Green = e
+    (0, 0, 255): 'l',     # Blue = l
+    (255, 255, 0): 'o',   # Yellow = o
+    (0, 255, 255): ' ',   # Cyan = space
+    (255, 0, 255): 'W',   # Magenta = W
+    (128, 128, 128): 'r', # Gray = r
+    (0, 0, 0): 'd',       # Black = d
+    (255, 255, 255): '#', # White = End
+}
+
+def decode_from_color_map(image_path):
+    img = Image.open(image_path)
+    pixels = list(img.getdata())
+    
+    message = ''
+    for pixel in pixels:
+        color = pixel[:3]  # Ignore alpha if present
+        if color in COLOR_CODEBOOK:
+            char = COLOR_CODEBOOK[color]
+            if char == '#':
+                break
+            message += char
+    return message
+
+# Path to your image
+image_path = "73643233-65d5-42e6-b016-a453516c80fe.png"
+print("Decoded:", decode_from_color_map(image_path))
