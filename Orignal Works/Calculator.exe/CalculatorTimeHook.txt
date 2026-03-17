@@ -1,0 +1,48 @@
+
+c
+#include 
+#include 
+
+// Target function signature (adjust based on actual params)
+typedef int (*TargetFunc)(void* rdi, void* rsi, void* rdx, void* rcx, void* r8, void* r9);
+
+// Original function pointer
+TargetFunc OriginalFunc = NULL;
+
+// Our hook implementation
+int __fastcall HookFunc(void* rdi, void* rsi, void* rdx, void* rcx, void* r8, void* r9) {
+// Log parameters (adjust based on your needs)
+printf("[HOOK] Called with rdi: %p, rsi: %p\n", rdi, rsi);
+
+// Your custom logic here
+// Example: Block certain operations or modify behavior
+
+// Call original function
+return OriginalFunc(rdi, rsi, rdx, rcx, r8, r9);
+}
+
+// Installation function
+void InstallHook() {
+// Find target function address (adjust to your needs)
+void* targetAddr = (void*)0x7FFE7B54A816; // Example address
+
+// Create trampoline (adjust based on architecture)
+BYTE jmp[] = { 0xE9, 0x00, 0x00, 0x00, 0x00 }; // JMP rel32
+
+// Calculate relative jump
+DWORD offset = (DWORD)((BYTE*)HookFunc - (BYTE*)targetAddr - 5);
+memcpy(&jmp[1], &offset, 4);
+
+// Save original bytes
+DWORD oldProtect;
+VirtualProtect(targetAddr, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+
+// Install hook
+memcpy(targetAddr, jmp, 5);
+
+// Restore protection
+VirtualProtect(targetAddr, 5, oldProtect, &oldProtect);
+
+// Get original function pointer (adjust based on your needs)
+OriginalFunc = (TargetFunc)((BYTE*)targetAddr + 5);
+}
