@@ -1,0 +1,44 @@
+### POC Python Exploit (Conceptual)
+Since this is a kernel-mode check, a user-mode exploit would require:
+1. Arbitrary Write Primitive (to modify `EPROCESS`/`PEB`).
+2. Memory Corruption (to bypass checks).
+3. ROP Chain (to disable protections).
+
+#### Example (Conceptual)
+python
+from ctypes import *
+import sys
+
+# Load ntdll and gdi32full
+ntdll = windll.ntdll
+gdi32 = windll.gdi32
+
+# Pseudo-code for bypassing checks
+def bypass_ntdll_checks():
+# 1. Get current EPROCESS
+hProcess = windll.kernel32.GetCurrentProcess()
+# 2. Modify EPROCESS flags (requires arbitrary write)
+# 3. Patch ntdll.7FFFDAD2F680 (sub rsp,28) to avoid checks
+# 4. Call ZwQueryInformationThread with manipulated args
+
+def bypass_gdi32_checks():
+# 1. Manipulate string comparison (rbx vs rbp)
+# 2. Call LdrpInitializeProcess
+pass
+
+if __name__ == "__main__":
+print("[*] Attempting to bypass ntdll/gdi32 checks...")
+bypass_ntdll_checks()
+bypass_gdi32_checks()
+print("[+] Checks bypassed (if successful).")
+
+
+### Real-World Exploit Considerations
+- Kernel Exploits (e.g., `HEVD`, `CVE-2021-4034`) are often needed.
+- Process Hollowing (e.g., `CreateProcess` + `NtUnmapViewOfSection`).
+- Thread Injection (e.g., `QueueUserAPC` + `NtCreateThreadEx`).
+
+### Final Notes
+- This is not a direct RCE exploit but a bypass technique.
+- Requires deep kernel knowledge and memory corruption.
+- Defenders would monitor `EPROCESS`/`PEB` modifications.
