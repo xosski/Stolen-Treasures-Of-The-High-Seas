@@ -1,0 +1,104 @@
+Defensive Vulnerability Report Draft
+
+Title: Potential Command Resolution / PATH Hijacking Risk in CLI Error-Handling Path
+
+Reporter: [Your Name]
+Date: [Date]
+Product / Component: amp CLI on Windows
+Version Observed: 0.0.1775067946-g9d30f6
+Environment: Windows with Git Bash / MINGW64 shell
+
+Summary
+
+During testing of invalid CLI input handling, the application appeared to invoke systeminfo while processing an unrecognized command. In the observed environment, the command failed with:
+
+'systeminfo' is not recognized as an internal or external command, operable program or batch file.
+
+This behavior suggests the application may be invoking a system helper by bare command name rather than by fully qualified path. If confirmed, this could introduce a command resolution or PATH hijacking risk, particularly where environment, working directory, or executable lookup order can be influenced.
+
+Observed Behavior
+
+A nonstandard command was entered:
+
+amp force update
+
+The CLI responded that force was unknown, but also attempted to execute systeminfo, which failed in the shell context.
+
+Observed output included:
+
+'systeminfo' is not recognized as an internal or external command,
+operable program or batch file.
+Error: Unknown command "force". Run 'amp --help' for the full list.
+Security Relevance
+
+This behavior may indicate that the application performs helper-command invocation during parsing, diagnostics, telemetry, or environment inspection. If helper commands are launched by bare name instead of absolute path, the following defensive concerns apply:
+
+unintended command resolution through PATH
+execution of a malicious or unintended binary with the same name
+trust-boundary issues if environment variables are attacker-controlled
+inconsistent behavior across shells and restricted environments
+possible contribution to sandbox or containment-boundary weakness if invoked from a privileged context
+
+This report does not claim confirmed exploitability. It documents a potentially unsafe command invocation pattern that should be reviewed.
+
+Affected Area
+
+Potentially affected logic includes:
+
+CLI error handling
+environment detection
+diagnostic collection
+platform-specific helper execution
+subprocess spawning on Windows
+Impact Assessment
+
+Potential impact: Medium
+Confidence: Low to Medium pending code review or controlled validation
+
+If confirmed, unsafe command lookup could permit local command hijacking under certain conditions. Impact would depend on:
+
+the privilege level of the parent process
+whether the app uses shell execution or direct process creation
+whether executable lookup order is controllable
+whether attacker-controlled directories or shims are reachable
+whether environment inheritance is sanitized
+Preconditions
+
+Potential risk would be higher if any of the following are true:
+
+helper binaries are invoked without absolute paths
+the process inherits untrusted PATH
+the working directory is attacker-influenced
+the application uses shell-based invocation
+the process runs with elevated privileges or crosses trust boundaries
+Reproduction Notes
+Open Git Bash / MINGW64 on Windows.
+
+Run:
+
+amp force update
+Observe that the CLI reports force as an unknown command.
+Observe whether the application also attempts to run systeminfo.
+Confirm whether this occurs consistently across shells and whether it happens before or after command validation.
+Evidence
+Screenshot/log showing invalid command handling and attempted systeminfo resolution failure.
+Version output from amp update.
+Root Cause Hypothesis
+
+The likely issue is helper-command invocation by bare executable name during an error or environment-inspection path. On Windows, this may rely on ambient command resolution instead of a fixed trusted path. If so, the code path should be treated as a hardening issue even if it is not directly exploitable in the tested environment.
+
+Recommended Defensive Fixes
+
+Use direct process creation with a fully qualified path for any trusted system utility. Do not rely on ambient shell resolution for helper commands. Avoid shell execution where possible. Sanitize inherited environment variables for subprocesses, especially PATH. Ensure the working directory is not part of trusted executable lookup. Log helper-command failures safely without changing control flow in security-sensitive paths.
+
+Suggested Validation
+
+Review subprocess invocation code for systeminfo and any other helper tools. Verify whether absolute paths are used on Windows. Confirm whether the code uses shell execution. Test benign command-resolution behavior in a controlled lab by adjusting PATH and working directory without introducing malicious payloads. Confirm that invalid subcommands do not trigger unnecessary helper execution.
+
+Severity Recommendation
+
+Initial recommendation: Low to Medium severity as a defensive hardening issue, pending confirmation of actual trust-boundary exposure.
+
+Final Notes
+
+This report documents a potential command resolution weakness and recommends hardening review. It does not claim a working exploit and should be treated as a secure subprocess handling issue until validated.
