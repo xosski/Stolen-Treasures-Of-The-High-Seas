@@ -1,0 +1,44 @@
+{
+  "name": "ChromeShell Exploit",
+  "manifest_version": 3,
+  "version": "1.0",
+  "permissions": [
+    "offscreen",
+    "storage",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {},
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "offscreen.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.discord.com/*"
+      ],
+      "js": [
+        "injector.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "description": "ChromeShell Exploit - A Chrome extension for exploiting vulnerabilities in Discord."
+}

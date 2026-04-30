@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="exploit.js"></script>
+</head>
+
+<body>
+  <script>
+    // Create an offscreen canvas
+    var offscreenCanvas = document.createElement('canvas');
+    var ctx = offscreenCanvas.getContext('2d');
+
+    // Set the size of the canvas
+    offscreenCanvas.width = 800;
+    offscreenCanvas.height = 600;
+
+    // Fill the canvas with a color
+    ctx.fillStyle = 'red';
+    ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+    // Convert the canvas to a blob
+    offscreenCanvas.toBlob(function (blob) {
+      console.log('Blob created:', blob);
+      // Here you can use the blob for further processing
+    });
+  </script>
+  "permissions": ["tabs", "storage", "activeTab", "scripting"],
+  "host_permissions": ["*://*.discord.com/*"]
+  "background": {
+  "service_worker": "background.js"
+  },
+  "content_scripts": [
+  {
+  "matches": ["*://*.discord.com/*"],
+  "js": ["content.js"]
+  }
+  ]
+</body>
+
+</html>

