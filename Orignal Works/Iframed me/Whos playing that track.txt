@@ -1,0 +1,242 @@
+PoC: Hidden Third-Party iframe / Media Injection Risk
+
+Finding name: Hidden third-party iframe/media injection
+Risk type: Content injection, unwanted third-party resource loading, privacy exposure, hidden media playback attempt
+Severity: Low to Medium by default; Medium to High if attacker-controlled HTML can be stored or executed across users.
+
+1. Summary
+
+A page that allows user-controlled HTML or unsafe rich-text content may allow an attacker to inject a hidden or off-screen iframe. Even when the iframe is not visible, the browser still loads the third-party resource. This can expose users to tracking, unwanted media behavior, deceptive embeds, phishing surfaces, or policy bypass attempts.
+
+This PoC demonstrates that an iframe can be rendered off-screen while still making a network request to a third-party media provider.
+
+This does not hide the source from the browser. The iframe URL remains visible in page source, DevTools, DOM inspection, browser network logs, extensions, and security tools.
+
+2. Test Case
+Benign injected payload
+
+Use a harmless media embed or test page as the iframe source:
+
+<div style="
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+">
+  <iframe
+    src="https://open.spotify.com/embed/track/1zN3CZlafjfEiMR9uXQGrW?utm_source=generator"
+    width="300"
+    height="80"
+    loading="lazy"
+    allow="encrypted-media; picture-in-picture">
+  </iframe>
+</div>
+
+Expected result:
+
+- The iframe is not visible in the normal page viewport.
+- The third-party URL still appears in the DOM.
+- The browser may load the third-party resource.
+- Autoplay with sound should usually be blocked by browser policy.
+- The iframe request is visible in DevTools → Network.
+3. Safer Local Test Page
+
+Use this controlled test page during a pentest:
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hidden iframe PoC</title>
+</head>
+<body>
+  <h1>Hidden iframe/media injection PoC</h1>
+
+  <p>
+    This page intentionally loads a third-party iframe off-screen
+    to prove whether injected iframe content is allowed.
+  </p>
+
+  <div id="poc-hidden-frame" style="
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  ">
+    <iframe
+      src="https://open.spotify.com/embed/track/1zN3CZlafjfEiMR9uXQGrW?utm_source=generator"
+      width="300"
+      height="80"
+      loading="lazy"
+      allow="encrypted-media; picture-in-picture">
+    </iframe>
+  </div>
+
+  <script>
+    console.log("PoC loaded: hidden iframe exists in DOM.");
+    console.log(document.querySelector("#poc-hidden-frame iframe").src);
+  </script>
+</body>
+</html>
+
+Validation steps:
+
+1. Open the page in a browser.
+2. Open DevTools.
+3. Inspect the DOM and confirm the iframe exists.
+4. Open the Network tab.
+5. Reload the page.
+6. Confirm requests to the third-party iframe domain.
+7. Confirm the iframe is not visible in the page viewport.
+4. Impact
+
+An attacker who can inject iframe HTML may be able to:
+
+- Load third-party trackers without user awareness.
+- Embed unwanted media providers.
+- Attempt hidden autoplay or media abuse.
+- Load phishing pages inside hidden or tiny frames.
+- Abuse user trust by making the page contact unexpected domains.
+- Create noisy or deceptive browser behavior.
+- Trigger privacy or compliance issues.
+
+The source is still discoverable, but most ordinary users will not inspect DevTools. That is the quiet little rat tunnel: not invisible, just socially hidden.
+
+5. Evidence to Capture
+
+For the report, include:
+
+- Screenshot of the normal page showing no visible iframe.
+- Screenshot of DevTools Elements tab showing the iframe in the DOM.
+- Screenshot of DevTools Network tab showing the third-party request.
+- The exact injected payload.
+- The affected input field, editor, parameter, or content area.
+- Whether the payload is stored, reflected, or DOM-based.
+- Whether CSP blocked or allowed the iframe.
+- Whether autoplay was attempted or blocked.
+6. Risk Rating Guide
+
+Low: iframe injection only works for the current user or in a sandboxed test area.
+
+Medium: stored iframe injection affects other users, moderators, admins, or public pages.
+
+High: attacker can inject arbitrary iframe sources, use permissive allow attributes, or combine the issue with phishing, credential theft, clickjacking, or script injection.
+
+7. Recommended Fixes
+A. Sanitize user HTML
+
+Strip iframe tags from user-controlled content unless explicitly required.
+
+Blocked tags should include:
+
+iframe
+object
+embed
+script
+audio
+video
+source
+B. Use a strict Content Security Policy
+
+Example:
+
+Content-Security-Policy: default-src 'self'; frame-src 'self' https://trusted.example.com; object-src 'none'; media-src 'self'; script-src 'self';
+
+For no third-party iframes:
+
+Content-Security-Policy: default-src 'self'; frame-src 'self'; object-src 'none';
+
+To block autoplay permission delegation:
+
+Permissions-Policy: autoplay=()
+
+To prevent your site from being framed elsewhere:
+
+Content-Security-Policy: frame-ancestors 'none';
+
+or:
+
+X-Frame-Options: DENY
+C. Restrict rich text editors
+
+Allow only safe formatting:
+
+p, br, strong, em, ul, ol, li, a
+
+For links, enforce:
+
+- only http/https
+- no javascript:
+- no data:
+- rel="noopener noreferrer"
+- target handling controlled by the app
+D. Detect hidden iframe patterns
+
+Flag injected content containing:
+
+position:absolute with large negative left/top
+display:none
+visibility:hidden
+opacity:0
+width/height 0 or 1px
+iframe with third-party src
+allow="autoplay"
+8. Example Detection Script
+
+This can be run in the browser console during testing:
+
+const suspiciousFrames = [...document.querySelectorAll("iframe")].map(frame => {
+  const style = window.getComputedStyle(frame);
+  const rect = frame.getBoundingClientRect();
+
+  const hidden =
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    Number(style.opacity) === 0 ||
+    rect.width <= 1 ||
+    rect.height <= 1 ||
+    rect.right < 0 ||
+    rect.bottom < 0 ||
+    rect.left > window.innerWidth ||
+    rect.top > window.innerHeight;
+
+  return {
+    src: frame.src,
+    hidden,
+    width: rect.width,
+    height: rect.height,
+    left: rect.left,
+    top: rect.top,
+    allow: frame.getAttribute("allow"),
+    sandbox: frame.getAttribute("sandbox")
+  };
+});
+
+console.table(suspiciousFrames);
+9. Report Wording
+
+Finding: Hidden Third-Party iframe Injection
+
+Description:
+The application allows iframe HTML to be inserted into user-controlled content. By applying CSS that positions the iframe off-screen, an attacker can cause a third-party media/resource embed to load without being visible in the normal page viewport.
+
+Security impact:
+This may enable unwanted third-party tracking, hidden media embeds, deceptive content loading, or future abuse if combined with phishing, permissive iframe permissions, or weak content security policy.
+
+Recommendation:
+Sanitize user-controlled HTML to remove iframe/object/embed/media tags unless explicitly required. Enforce a restrictive Content Security Policy using frame-src, object-src, and Permissions-Policy. Only allow approved embed providers through a server-side allowlist.
+
+10. Final PoC Statement
+The iframe is visually hidden, not technically hidden.
+
+The browser still sees it.
+The network still records it.
+DevTools still exposes it.
+CSP can still block it.
+
+The risk is not invisibility.
+The risk is silent third-party loading through unsafe content injection.
