@@ -1,0 +1,851 @@
+(() => {
+  if (window.xDmMediaGui?.destroy) window.xDmMediaGui.destroy();
+
+  const CONFIG = {
+    maxThreads: 10,
+    scrollStepsPerThread: 20,
+    scrollDelayMs: 1000,
+    threadOpenDelayMs: 3500,
+    returnDelayMs: 2500,
+
+    // Turn this true only if you want it to click visible thumbnails
+    // to force higher-res media/viewer resources to load.
+    clickMediaViewer: false,
+    mediaViewerDelayMs: 1200,
+
+    // X DM CDN images often end with :small. This tries :large for preview/export.
+    // Set false if :large does not load for your account/session.
+    upgradeTonImagesToLarge: true
+  };
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  const state = {
+    results: [],
+    seenMedia: new Set(),
+    seenThreadKeys: new Set(),
+    stopped: false,
+    running: false
+  };
+
+  const log = (...a) => console.log("[xDmMediaGui]", ...a);
+  const warn = (...a) => console.warn("[xDmMediaGui]", ...a);
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #xdm-panel {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2147483647;
+      width: 480px;
+      max-height: 84vh;
+      background: #0f1419;
+      color: #e7e9ea;
+      border: 1px solid #2f3336;
+      border-radius: 16px;
+      box-shadow: 0 16px 45px rgba(0,0,0,.45);
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #xdm-head {
+      padding: 12px;
+      border-bottom: 1px solid #2f3336;
+      cursor: move;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+    #xdm-title { font-weight: 800; font-size: 14px; }
+    #xdm-sub { color: #8b98a5; font-size: 12px; margin-top: 2px; }
+    #xdm-actions {
+      padding: 8px 10px;
+      border-bottom: 1px solid #2f3336;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    #xdm-panel button {
+      background: #1d9bf0;
+      color: white;
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #xdm-panel button.secondary { background: #2f3336; }
+    #xdm-panel button.danger { background: #f4212e; }
+    #xdm-list {
+      padding: 10px;
+      overflow: auto;
+      max-height: 54vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .xdm-card {
+      border: 1px solid #2f3336;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #16181c;
+    }
+    .xdm-card img, .xdm-card video {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+    .xdm-meta {
+      padding: 8px;
+      font-size: 11px;
+      color: #8b98a5;
+      word-break: break-word;
+    }
+    .xdm-meta a {
+      color: #1d9bf0;
+      text-decoration: none;
+    }
+    #xdm-status {
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #8b98a5;
+      border-top: 1px solid #2f3336;
+    }
+    #xdm-rows {
+      padding: 8px 12px;
+      max-height: 130px;
+      overflow: auto;
+      font-size: 11px;
+      border-bottom: 1px solid #2f3336;
+      color: #8b98a5;
+      display: none;
+    }
+  `;
+
+  const panel = document.createElement("div");
+  panel.id = "xdm-panel";
+  panel.innerHTML = `
+    <div id="xdm-head">
+      <div>
+        <div id="xdm-title">X DM Media Walker</div>
+        <div id="xdm-sub">TON DM image capture + preview/export</div>
+      </div>
+      <button class="danger" id="xdm-close">×</button>
+    </div>
+
+    <div id="xdm-actions">
+      <button id="xdm-detect">Detect rows</button>
+      <button id="xdm-start">Start walker</button>
+      <button class="danger" id="xdm-stop">Stop</button>
+      <button class="secondary" id="xdm-scan">Scan current</button>
+      <button class="secondary" id="xdm-json">Export JSON</button>
+      <button class="secondary" id="xdm-urls">Export image URLs</button>
+      <button class="secondary" id="xdm-gallery">Export gallery HTML</button>
+      <button class="secondary" id="xdm-clear">Clear</button>
+    </div>
+
+    <div id="xdm-rows"></div>
+    <div id="xdm-list"></div>
+    <div id="xdm-status">Open x.com/messages, scroll the inbox, then Detect rows or Start walker.</div>
+  `;
+
+  document.documentElement.appendChild(style);
+  document.body.appendChild(panel);
+
+  const list = panel.querySelector("#xdm-list");
+  const status = panel.querySelector("#xdm-status");
+  const rowsBox = panel.querySelector("#xdm-rows");
+
+  function setStatus(msg) {
+    status.textContent = msg;
+    log(msg);
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c]));
+  }
+
+  function isProfilePic(url) {
+    return /profile_images|profile_banners|emoji|hashflags|card_img|profile_interstitial/i.test(url || "");
+  }
+
+  function isTonDmMedia(url) {
+    return /ton\.x\.com\/i\/ton\/data\/dm/i.test(url || "");
+  }
+
+  function isLikelyMedia(url) {
+    if (!url) return false;
+    if (url.startsWith("blob:")) return true;
+
+    return (
+      /pbs\.twimg\.com\/media/i.test(url) ||
+      isTonDmMedia(url) ||
+      /video\.twimg\.com/i.test(url) ||
+      /dm_video/i.test(url) ||
+      /amplify_video/i.test(url) ||
+      /ton\.twitter\.com/i.test(url)
+    );
+  }
+
+  function cleanUrl(url, kind) {
+    if (!url || url.startsWith("blob:")) return url;
+
+    try {
+      const u = new URL(url, location.href);
+
+      if (
+        kind.includes("image") &&
+        u.hostname.includes("pbs.twimg.com") &&
+        u.pathname.includes("/media/")
+      ) {
+        u.searchParams.set("name", "orig");
+      }
+
+      if (CONFIG.upgradeTonImagesToLarge && isTonDmMedia(u.toString())) {
+        return u.toString().replace(/:(small|medium|thumb)$/i, ":large");
+      }
+
+      return u.toString();
+    } catch {
+      return url;
+    }
+  }
+
+  function getNearbyText(el) {
+    const msg = el?.closest?.(
+      '[data-testid="messageEntry"], [data-testid="cellInnerDiv"], div[role="group"], article'
+    );
+
+    return (msg?.innerText || "").replace(/\s+/g, " ").slice(0, 500);
+  }
+
+  function add(kind, url, el = document.body) {
+    if (!url || isProfilePic(url) || !isLikelyMedia(url)) return;
+
+    if (url.startsWith("blob:")) kind = "video_blob";
+
+    if (isTonDmMedia(url) && !kind.includes("ton")) {
+      kind = kind.includes("background")
+        ? "dm_ton_background_image"
+        : kind.includes("resource")
+          ? "dm_ton_resource"
+          : "dm_ton_image";
+    }
+
+    url = cleanUrl(url, kind);
+
+    const key = `${kind}:${url}`;
+    if (state.seenMedia.has(key)) return;
+
+    state.seenMedia.add(key);
+
+    state.results.push({
+      kind,
+      url,
+      page: location.href,
+      textNearby: getNearbyText(el),
+      capturedAt: new Date().toISOString()
+    });
+  }
+
+  function collectFromDom() {
+    document.querySelectorAll("img").forEach(img => {
+      [
+        img.currentSrc,
+        img.src,
+        img.getAttribute("src"),
+        img.getAttribute("data-src")
+      ].filter(Boolean).forEach(src => add("image", src, img));
+    });
+
+    document.querySelectorAll("video").forEach(video => {
+      add("video", video.currentSrc || video.src, video);
+
+      video.querySelectorAll("source").forEach(s => {
+        add("video", s.src, s);
+      });
+    });
+
+    document.querySelectorAll("*").forEach(el => {
+      const bg = getComputedStyle(el).backgroundImage;
+
+      if (bg && bg.includes("url(") && /twimg|twitter|x\.com|ton\.x\.com/i.test(bg)) {
+        const m = bg.match(/url\(["']?(.*?)["']?\)/);
+        if (m) add("background_image", m[1], el);
+      }
+    });
+  }
+
+  function collectFromPerformance() {
+    performance.getEntriesByType("resource")
+      .map(r => r.name)
+      .filter(Boolean)
+      .filter(url => !isProfilePic(url))
+      .filter(isLikelyMedia)
+      .forEach(url => {
+        const kind = isTonDmMedia(url)
+          ? "dm_ton_resource"
+          : /video|dm_video|amplify/i.test(url)
+            ? "video_resource"
+            : "image_resource";
+
+        add(kind, url, document.body);
+      });
+  }
+
+  function collectFromMediaAnchors() {
+    document.querySelectorAll('a[href*="/messages/"][href*="/media/"]').forEach(a => {
+      a.querySelectorAll("img").forEach(img => {
+        [
+          img.currentSrc,
+          img.src,
+          img.getAttribute("src"),
+          img.getAttribute("data-src")
+        ].filter(Boolean).forEach(src => add("dm_media_anchor_image", src, img));
+      });
+
+      a.querySelectorAll("*").forEach(el => {
+        const bg = getComputedStyle(el).backgroundImage;
+        if (bg && bg.includes("url(")) {
+          const m = bg.match(/url\(["']?(.*?)["']?\)/);
+          if (m) add("dm_media_anchor_background", m[1], el);
+        }
+      });
+    });
+  }
+
+  function collect() {
+    collectFromDom();
+    collectFromMediaAnchors();
+    collectFromPerformance();
+    render();
+    setStatus(`Captured ${state.results.length} media item(s).`);
+  }
+
+  function strongClick(el) {
+    if (!el) return false;
+
+    try {
+      el.scrollIntoView({ block: "center", inline: "center" });
+    } catch {}
+
+    const rect = el.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    for (const type of ["pointerdown", "mousedown", "pointerup", "mouseup", "click"]) {
+      el.dispatchEvent(
+        new MouseEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: x,
+          clientY: y
+        })
+      );
+    }
+
+    return true;
+  }
+
+  function getInboxRows() {
+    const candidates = [
+      ...document.querySelectorAll('a[href*="/messages"]'),
+      ...document.querySelectorAll('[data-testid="cellInnerDiv"]'),
+      ...document.querySelectorAll('div[role="button"]'),
+      ...document.querySelectorAll('div[role="link"]')
+    ];
+
+    const rows = candidates
+      .map((el, i) => {
+        const rect = el.getBoundingClientRect();
+        const text = (el.innerText || "").replace(/\s+/g, " ").trim();
+
+        const anchor =
+          el.matches?.('a[href*="/messages"]')
+            ? el
+            : el.querySelector?.('a[href*="/messages"]');
+
+        const clickable =
+          anchor ||
+          el.querySelector?.('[role="link"], [role="button"], a, button') ||
+          el;
+
+        return {
+          el,
+          clickable,
+          anchor,
+          i,
+          rect,
+          text,
+          href: anchor?.href || anchor?.getAttribute?.("href") || null
+        };
+      })
+      .filter(x =>
+        x.text.length > 0 &&
+        x.rect.width > 200 &&
+        x.rect.height > 35 &&
+        x.rect.top >= 0 &&
+        x.rect.bottom <= window.innerHeight
+      )
+      .filter(x => !/New message|Messages|Search Direct Messages|Settings/i.test(x.text));
+
+    const unique = [];
+    const seen = new Set();
+
+    for (const row of rows) {
+      const key = (row.href || row.text).slice(0, 180);
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(row);
+      }
+    }
+
+    return unique.slice(0, CONFIG.maxThreads);
+  }
+
+  function detectRows() {
+    const anchors = [...document.querySelectorAll("a")]
+      .map(a => ({
+        href: a.getAttribute("href"),
+        text: (a.innerText || "").replace(/\s+/g, " ").slice(0, 120)
+      }))
+      .filter(x => x.href && x.href.includes("messages"));
+
+    const cells = [...document.querySelectorAll('[data-testid="cellInnerDiv"], div[role="button"], div[role="link"]')]
+      .map((el, i) => ({
+        i,
+        role: el.getAttribute("role"),
+        testid: el.getAttribute("data-testid"),
+        text: (el.innerText || "").replace(/\s+/g, " ").slice(0, 160),
+        rect: (() => {
+          const r = el.getBoundingClientRect();
+          return `${Math.round(r.width)}x${Math.round(r.height)}`;
+        })()
+      }))
+      .filter(x => x.text);
+
+    const rows = getInboxRows();
+
+    console.log("message anchors:", anchors.length);
+    console.table(anchors.slice(0, 50));
+
+    console.log("clickable-ish cells:", cells.length);
+    console.table(cells.slice(0, 80));
+
+    console.log("walker rows:", rows.length);
+    console.table(rows.map((r, i) => ({
+      index: i + 1,
+      text: r.text.slice(0, 160),
+      href: r.href,
+      size: `${Math.round(r.rect.width)}x${Math.round(r.rect.height)}`
+    })));
+
+    rowsBox.style.display = "block";
+    rowsBox.innerHTML = rows.length
+      ? rows.map((r, i) => `<div><b>${i + 1}.</b> ${escapeHtml(r.text.slice(0, 140))}</div>`).join("")
+      : "No rows detected. Click/scroll the inbox list and try again.";
+
+    setStatus(`Detected ${rows.length} clickable inbox row(s).`);
+    return { anchors, cells, rows };
+  }
+
+  function getScrollContainers() {
+    return [...document.querySelectorAll("div")]
+      .filter(el => el.scrollHeight > el.clientHeight + 300)
+      .sort((a, b) => b.scrollHeight - a.scrollHeight);
+  }
+
+  async function waitForThreadOpen(oldUrl, timeoutMs = 15000) {
+    const start = Date.now();
+
+    while (Date.now() - start < timeoutMs) {
+      const path = location.pathname;
+
+      if (
+        location.href !== oldUrl &&
+        path.startsWith("/messages") &&
+        path !== "/messages"
+      ) {
+        return true;
+      }
+
+      const hasMessageBox =
+        document.querySelector('[data-testid="dmComposerTextInput"]') ||
+        document.querySelector('[data-testid="messageEntry"]') ||
+        document.querySelector('div[aria-label*="Message"]');
+
+      if (hasMessageBox && path.startsWith("/messages")) {
+        return true;
+      }
+
+      await sleep(250);
+    }
+
+    return false;
+  }
+
+  async function maybeClickVisibleMedia() {
+    if (!CONFIG.clickMediaViewer) return;
+
+    const candidates = [...document.querySelectorAll('a[href*="/messages/"][href*="/media/"], img')]
+      .filter(el => {
+        const src = el.currentSrc || el.src || el.href || "";
+        if (isProfilePic(src)) return false;
+
+        const r = el.getBoundingClientRect();
+        return r.width > 80 && r.height > 80;
+      });
+
+    for (const el of candidates.slice(0, 6)) {
+      if (state.stopped) return;
+
+      try {
+        strongClick(el);
+        await sleep(CONFIG.mediaViewerDelayMs);
+        collect();
+
+        const closeBtn =
+          document.querySelector('[aria-label="Close"]') ||
+          document.querySelector('[data-testid="app-bar-close"]');
+
+        if (closeBtn) closeBtn.click();
+        else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+        await sleep(600);
+      } catch {}
+    }
+  }
+
+  async function scrollThread() {
+    collect();
+
+    for (let i = 0; i < CONFIG.scrollStepsPerThread; i++) {
+      if (state.stopped) return;
+
+      window.scrollBy(0, -900);
+
+      for (const el of getScrollContainers().slice(0, 5)) {
+        try {
+          el.scrollTop -= 1000;
+        } catch {}
+      }
+
+      await sleep(CONFIG.scrollDelayMs);
+      collect();
+
+      if (i % 5 === 0) {
+        await maybeClickVisibleMedia();
+      }
+    }
+
+    collect();
+  }
+
+  async function openRow(row) {
+    const oldUrl = location.href;
+
+    try {
+      row.el.scrollIntoView({ block: "center" });
+      await sleep(500);
+
+      if (row.href) {
+        strongClick(row.clickable || row.anchor || row.el);
+        await sleep(1000);
+
+        if (location.href === oldUrl && row.anchor) {
+          row.anchor.click();
+        }
+      } else {
+        strongClick(row.clickable || row.el);
+      }
+    } catch (e) {
+      warn("Click failed", e);
+      return false;
+    }
+
+    return await waitForThreadOpen(oldUrl);
+  }
+
+  async function startWalker() {
+    if (state.running) {
+      warn("Already running.");
+      return;
+    }
+
+    if (!location.pathname.startsWith("/messages")) {
+      warn("Open https://x.com/messages first.");
+      setStatus("Open https://x.com/messages first.");
+      return;
+    }
+
+    state.running = true;
+    state.stopped = false;
+
+    let rows = getInboxRows();
+
+    if (!rows.length) {
+      detectRows();
+      setStatus("No clickable rows. Click/scroll the inbox list and try again.");
+      state.running = false;
+      return;
+    }
+
+    setStatus(`Starting walker for up to ${rows.length} visible row(s).`);
+
+    for (let i = 0; i < rows.length; i++) {
+      if (state.stopped) break;
+
+      rows = getInboxRows();
+      const row = rows[i];
+      if (!row) continue;
+
+      const rowKey = (row.href || row.text).slice(0, 180);
+
+      if (state.seenThreadKeys.has(rowKey)) {
+        continue;
+      }
+
+      state.seenThreadKeys.add(rowKey);
+
+      setStatus(`Opening row ${i + 1}/${rows.length}: ${row.text.slice(0, 80)}`);
+
+      const opened = await openRow(row);
+
+      if (!opened) {
+        warn("Row did not open a thread; continuing.");
+        setStatus("Row did not open a thread; continuing.");
+        continue;
+      }
+
+      await sleep(CONFIG.threadOpenDelayMs);
+      await scrollThread();
+
+      setStatus(`Thread done. Total captured: ${state.results.length}`);
+
+      if (state.stopped) break;
+
+      history.back();
+      await sleep(CONFIG.returnDelayMs);
+    }
+
+    state.running = false;
+    render();
+    setStatus(`Finished/stopped. Captured ${state.results.length} media item(s).`);
+  }
+
+  function imageItems() {
+    return state.results.filter(r =>
+      r.url.includes("pbs.twimg.com/media") ||
+      r.url.includes("ton.x.com/i/ton/data/dm") ||
+      r.kind.includes("image") ||
+      r.kind === "background_image" ||
+      r.kind.includes("ton")
+    );
+  }
+
+  function render() {
+    list.innerHTML = "";
+
+    if (!state.results.length) {
+      list.innerHTML = `<div style="grid-column:1/-1;color:#8b98a5;font-size:13px;">No media captured yet.</div>`;
+      return;
+    }
+
+    state.results.forEach((item, i) => {
+      const isVideo = item.kind.includes("video") || item.url.startsWith("blob:");
+
+      const card = document.createElement("div");
+      card.className = "xdm-card";
+
+      card.innerHTML = `
+        ${
+          isVideo
+            ? `<video src="${escapeHtml(item.url)}" controls muted></video>`
+            : `<img src="${escapeHtml(item.url)}" loading="lazy">`
+        }
+        <div class="xdm-meta">
+          <b>${i + 1}. ${escapeHtml(item.kind)}</b><br>
+          <a href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">open media</a><br>
+          ${item.url.startsWith("blob:") ? "<b>temporary blob video</b><br>" : ""}
+          ${escapeHtml((item.textNearby || "").slice(0, 160))}
+        </div>
+      `;
+
+      list.appendChild(card);
+    });
+  }
+
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify(state.results, null, 2)], {
+      type: "application/json"
+    });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `x-dm-media-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    setStatus(`Exported ${state.results.length} media records as JSON.`);
+  }
+
+  function exportImageURLs() {
+    const images = imageItems();
+    const text = images.map(x => x.url).join("\n");
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `x-dm-image-urls-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    setStatus(`Exported ${images.length} image URL(s).`);
+  }
+
+  function exportGalleryHTML() {
+    const items = imageItems();
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>X DM Media Gallery</title>
+<style>
+body{font-family:system-ui;background:#111;color:#eee;margin:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.card{background:#1b1b1b;border:1px solid #333;border-radius:12px;overflow:hidden}
+img{width:100%;height:220px;object-fit:cover;background:#000}
+.meta{padding:10px;font-size:12px;color:#aaa;word-break:break-word}
+a{color:#6ab7ff}
+</style>
+</head>
+<body>
+<h1>X DM Media Gallery</h1>
+<p>${items.length} image(s)</p>
+<div class="grid">
+${items.map((item, i) => `
+  <div class="card">
+    <a href="${escapeHtml(item.url)}" target="_blank"><img src="${escapeHtml(item.url)}"></a>
+    <div class="meta">
+      <b>${i + 1}</b><br>
+      <a href="${escapeHtml(item.url)}" target="_blank">open original</a><br>
+      ${escapeHtml(item.textNearby || "")}
+    </div>
+  </div>
+`).join("")}
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `x-dm-media-gallery-${Date.now()}.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    setStatus(`Exported gallery HTML with ${items.length} image(s).`);
+  }
+
+  function clearAll() {
+    state.results.length = 0;
+    state.seenMedia.clear();
+    render();
+    setStatus("Cleared captured media.");
+  }
+
+  function stop() {
+    state.stopped = true;
+    setStatus("Stop requested. Walker will stop after the current step.");
+  }
+
+  function destroy() {
+    state.stopped = true;
+    panel.remove();
+    style.remove();
+    delete window.xDmMediaGui;
+  }
+
+  // Drag panel
+  const head = panel.querySelector("#xdm-head");
+  let dragging = false;
+  let ox = 0;
+  let oy = 0;
+
+  head.addEventListener("mousedown", e => {
+    if (e.target.tagName === "BUTTON") return;
+
+    dragging = true;
+
+    const r = panel.getBoundingClientRect();
+    ox = e.clientX - r.left;
+    oy = e.clientY - r.top;
+
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+  });
+
+  window.addEventListener("mousemove", e => {
+    if (!dragging) return;
+
+    panel.style.left = `${e.clientX - ox}px`;
+    panel.style.top = `${e.clientY - oy}px`;
+  });
+
+  window.addEventListener("mouseup", () => {
+    dragging = false;
+  });
+
+  panel.querySelector("#xdm-detect").onclick = detectRows;
+  panel.querySelector("#xdm-start").onclick = startWalker;
+  panel.querySelector("#xdm-stop").onclick = stop;
+  panel.querySelector("#xdm-scan").onclick = collect;
+  panel.querySelector("#xdm-json").onclick = exportJSON;
+  panel.querySelector("#xdm-urls").onclick = exportImageURLs;
+  panel.querySelector("#xdm-gallery").onclick = exportGalleryHTML;
+  panel.querySelector("#xdm-clear").onclick = clearAll;
+  panel.querySelector("#xdm-close").onclick = destroy;
+
+  window.xDmMediaGui = {
+    CONFIG,
+    state,
+    results: state.results,
+    detectRows,
+    startWalker,
+    stop,
+    collect,
+    exportJSON,
+    exportImageURLs,
+    exportGalleryHTML,
+    clearAll,
+    destroy
+  };
+
+  render();
+  detectRows();
+
+  console.log("X DM Media GUI loaded.");
+  console.log("Commands:", {
+    detectRows: "xDmMediaGui.detectRows()",
+    start: "xDmMediaGui.startWalker()",
+    stop: "xDmMediaGui.stop()",
+    scanCurrent: "xDmMediaGui.collect()",
+    exportJSON: "xDmMediaGui.exportJSON()",
+    exportImageURLs: "xDmMediaGui.exportImageURLs()",
+    exportGalleryHTML: "xDmMediaGui.exportGalleryHTML()"
+  });
+})();
