@@ -1,0 +1,21 @@
+00007FFEA5AD7B87 | 48:FFC3                       | inc rbx                                 | rbx:"LdrpInitializeProcess"
+00007FFEA5AD7B8A | 6644:393C5F                   | cmp word ptr ds:[rdi+rbx*2],r15w        |
+00007FFEA5AD7B8F | 75 F6                         | jne ntdll.7FFEA5AD7B87                  |
+00007FFEA5AD7B91 | 4C:8D041B                     | lea r8,qword ptr ds:[rbx+rbx]           |
+00007FFEA5AD7B95 | 48:8BD7                       | mov rdx,rdi                             |
+00007FFEA5AD7B98 | 48:8BCE                       | mov rcx,rsi                             | rcx:NtQueryInformationThread+14, rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD7B9B | E8 20DC0C00                   | call <ntdll.RtlCopyMemory>              |
+00007FFEA5AD7BA0 | 48:8935 51981300              | mov qword ptr ds:[7FFEA5C113F8],rsi     | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD7BA7 | 4C:8935 DA9D1300              | mov qword ptr ds:[7FFEA5C11988],r14     |
+00007FFEA5AD7BAE | E9 69FFFFFF                   | jmp ntdll.7FFEA5AD7B1C                  |
+00007FFEA5AD7BB3 | 48:8D05 4E4F0E00              | lea rax,qword ptr ds:[7FFEA5BBCB08]     | 00007FFEA5BBCB08:"Failed to allocated memory for shimmed module list\n"
+00007FFEA5AD7BBA | 45:33C9                       | xor r9d,r9d                             |
+00007FFEA5AD7BBD | 4C:8D05 7C4F0E00              | lea r8,qword ptr ds:[7FFEA5BBCB40]      | 00007FFEA5BBCB40:"LdrpCheckModule"
+00007FFEA5AD7BC4 | 48:894424 20                  | mov qword ptr ss:[rsp+20],rax           |
+00007FFEA5AD7BC9 | BA 220F0000                   | mov edx,F22                             |
+00007FFEA5AD7BCE | 48:8D0D 2BFB0D00              | lea rcx,qword ptr ds:[7FFEA5BB7700]     | rcx:NtQueryInformationThread+14, 00007FFEA5BB7700:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD7BD5 | E8 D64EF8FF                   | call ntdll.7FFEA5A5CAB0                 |
+00007FFEA5AD7BDA | E9 3DFFFFFF                   | jmp ntdll.7FFEA5AD7B1C                  |
+00007FFEA5AD7BDF | 4C:8B35 A29D1300              | mov r14,qword ptr ds:[7FFEA5C11988]     |
+00007FFEA5AD7BE6 | 49:FFC6                       | inc r14                                 |
+00007FFEA5AD7BE9 | 4C:03F2                       | add r14,rdx                             |

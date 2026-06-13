@@ -1,0 +1,7 @@
+00007FFEA5B6AF50 | 4C:894C24 20                  | mov qword ptr ss:[rsp+20],r9            |
+00007FFEA5B6AF55 | 48:83EC 48                    | sub rsp,48                              |
+00007FFEA5B6AF59 | 48:8D4424 70                  | lea rax,qword ptr ss:[rsp+70]           |
+00007FFEA5B6AF5E | 48:894424 20                  | mov qword ptr ss:[rsp+20],rax           |
+00007FFEA5B6AF63 | E8 18000000                   | call <ntdll._vsnprintf_s>               |
+00007FFEA5B6AF68 | 48:83C4 48                    | add rsp,48                              |
+00007FFEA5B6AF6C | C3                            | ret                                     |

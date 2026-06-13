@@ -1,0 +1,84 @@
+00007FFEA5B6AAD0 | 48:83EC 38                    | sub rsp,38                              |
+00007FFEA5B6AAD4 | 33C0                          | xor eax,eax                             |
+00007FFEA5B6AAD6 | 41:83F9 0A                    | cmp r9d,A                               | 0A:'\n'
+00007FFEA5B6AADA | 75 09                         | jne ntdll.7FFEA5B6AAE5                  |
+00007FFEA5B6AADC | 48:85C9                       | test rcx,rcx                            | rcx:NtQueryInformationThread+14
+00007FFEA5B6AADF | 79 04                         | jns ntdll.7FFEA5B6AAE5                  |
+00007FFEA5B6AAE1 | 41:8D41 F7                    | lea eax,qword ptr ds:[r9-9]             |
+00007FFEA5B6AAE5 | 894424 20                     | mov dword ptr ss:[rsp+20],eax           |
+00007FFEA5B6AAE9 | E8 7E000000                   | call ntdll.7FFEA5B6AB6C                 |
+00007FFEA5B6AAEE | 48:83C4 38                    | add rsp,38                              |
+00007FFEA5B6AAF2 | C3                            | ret                                     |
+00007FFEA5B6AAF3 | CC                            | int3                                    |
+00007FFEA5B6AAF4 | CC                            | int3                                    |
+00007FFEA5B6AAF5 | CC                            | int3                                    |
+00007FFEA5B6AAF6 | CC                            | int3                                    |
+00007FFEA5B6AAF7 | CC                            | int3                                    |
+00007FFEA5B6AAF8 | CC                            | int3                                    |
+00007FFEA5B6AAF9 | CC                            | int3                                    |
+00007FFEA5B6AAFA | CC                            | int3                                    |
+00007FFEA5B6AAFB | CC                            | int3                                    |
+00007FFEA5B6AAFC | CC                            | int3                                    |
+00007FFEA5B6AAFD | CC                            | int3                                    |
+00007FFEA5B6AAFE | CC                            | int3                                    |
+00007FFEA5B6AAFF | CC                            | int3                                    |
+00007FFEA5B6AB00 | 48:83EC 38                    | sub rsp,38                              |
+00007FFEA5B6AB04 | 33C0                          | xor eax,eax                             |
+00007FFEA5B6AB06 | 41:83F9 0A                    | cmp r9d,A                               | 0A:'\n'
+00007FFEA5B6AB0A | 75 08                         | jne ntdll.7FFEA5B6AB14                  |
+00007FFEA5B6AB0C | 85C9                          | test ecx,ecx                            |
+00007FFEA5B6AB0E | 79 04                         | jns ntdll.7FFEA5B6AB14                  |
+00007FFEA5B6AB10 | 41:8D41 F7                    | lea eax,qword ptr ds:[r9-9]             |
+00007FFEA5B6AB14 | 894424 20                     | mov dword ptr ss:[rsp+20],eax           |
+00007FFEA5B6AB18 | E8 93010000                   | call ntdll.7FFEA5B6ACB0                 |
+00007FFEA5B6AB1D | 48:83C4 38                    | add rsp,38                              |
+00007FFEA5B6AB21 | C3                            | ret                                     |
+00007FFEA5B6AB22 | CC                            | int3                                    |
+00007FFEA5B6AB23 | CC                            | int3                                    |
+00007FFEA5B6AB24 | CC                            | int3                                    |
+00007FFEA5B6AB25 | CC                            | int3                                    |
+00007FFEA5B6AB26 | CC                            | int3                                    |
+00007FFEA5B6AB27 | CC                            | int3                                    |
+00007FFEA5B6AB28 | CC                            | int3                                    |
+00007FFEA5B6AB29 | CC                            | int3                                    |
+00007FFEA5B6AB2A | CC                            | int3                                    |
+00007FFEA5B6AB2B | CC                            | int3                                    |
+00007FFEA5B6AB2C | CC                            | int3                                    |
+00007FFEA5B6AB2D | CC                            | int3                                    |
+00007FFEA5B6AB2E | CC                            | int3                                    |
+00007FFEA5B6AB2F | CC                            | int3                                    |
+00007FFEA5B6AB30 | 48:83EC 38                    | sub rsp,38                              |
+00007FFEA5B6AB34 | 836424 20 00                  | and dword ptr ss:[rsp+20],0             |
+00007FFEA5B6AB39 | E8 2E000000                   | call ntdll.7FFEA5B6AB6C                 |
+00007FFEA5B6AB3E | 48:83C4 38                    | add rsp,38                              |
+00007FFEA5B6AB42 | C3                            | ret                                     |
+00007FFEA5B6AB43 | CC                            | int3                                    |
+00007FFEA5B6AB44 | CC                            | int3                                    |
+00007FFEA5B6AB45 | CC                            | int3                                    |
+00007FFEA5B6AB46 | CC                            | int3                                    |
+00007FFEA5B6AB47 | CC                            | int3                                    |
+00007FFEA5B6AB48 | CC                            | int3                                    |
+00007FFEA5B6AB49 | CC                            | int3                                    |
+00007FFEA5B6AB4A | CC                            | int3                                    |
+00007FFEA5B6AB4B | CC                            | int3                                    |
+00007FFEA5B6AB4C | CC                            | int3                                    |
+00007FFEA5B6AB4D | CC                            | int3                                    |
+00007FFEA5B6AB4E | CC                            | int3                                    |
+00007FFEA5B6AB4F | CC                            | int3                                    |
+00007FFEA5B6AB50 | 48:83EC 38                    | sub rsp,38                              |
+00007FFEA5B6AB54 | 836424 20 00                  | and dword ptr ss:[rsp+20],0             |
+00007FFEA5B6AB59 | E8 52010000                   | call ntdll.7FFEA5B6ACB0                 |
+00007FFEA5B6AB5E | 48:83C4 38                    | add rsp,38                              |
+00007FFEA5B6AB62 | C3                            | ret                                     |
+00007FFEA5B6AB63 | CC                            | int3                                    |
+00007FFEA5B6AB64 | CC                            | int3                                    |
+00007FFEA5B6AB65 | CC                            | int3                                    |
+00007FFEA5B6AB66 | CC                            | int3                                    |
+00007FFEA5B6AB67 | CC                            | int3                                    |
+00007FFEA5B6AB68 | CC                            | int3                                    |
+00007FFEA5B6AB69 | CC                            | int3                                    |
+00007FFEA5B6AB6A | CC                            | int3                                    |
+00007FFEA5B6AB6B | CC                            | int3                                    |
+00007FFEA5B6AB6C | 48:895C24 08                  | mov qword ptr ss:[rsp+8],rbx            | [rsp+08]:RtlQueryElevationFlags+241
+00007FFEA5B6AB71 | 48:896C24 10                  | mov qword ptr ss:[rsp+10],rbp           |
+00007FFEA5B6AB76 | 48:897424 18                  | mov qword ptr ss:[rsp+18],rsi           |

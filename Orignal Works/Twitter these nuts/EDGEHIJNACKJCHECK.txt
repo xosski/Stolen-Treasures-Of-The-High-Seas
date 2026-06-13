@@ -1,0 +1,21 @@
+00007FFEA5B5D095 | CC                            | int3                                    |
+00007FFEA5B5D096 | CC                            | int3                                    |
+00007FFEA5B5D097 | CC                            | int3                                    |
+00007FFEA5B5D098 | CC                            | int3                                    |
+00007FFEA5B5D099 | CC                            | int3                                    |
+00007FFEA5B5D09A | CC                            | int3                                    |
+00007FFEA5B5D09B | CC                            | int3                                    |
+00007FFEA5B5D09C | CC                            | int3                                    |
+00007FFEA5B5D09D | CC                            | int3                                    |
+00007FFEA5B5D09E | CC                            | int3                                    |
+00007FFEA5B5D09F | CC                            | int3                                    |
+00007FFEA5B5D0A0 | 48:8D05 09760400              | lea rax,qword ptr ds:[<RtlRaiseExceptio |
+00007FFEA5B5D0A7 | C3                            | ret                                     |
+00007FFEA5B5D0A8 | CC                            | int3                                    |
+00007FFEA5B5D0A9 | CC                            | int3                                    |
+00007FFEA5B5D0AA | CC                            | int3                                    |
+00007FFEA5B5D0AB | CC                            | int3                                    |
+00007FFEA5B5D0AC | CC                            | int3                                    |
+00007FFEA5B5D0AD | CC                            | int3                                    |
+00007FFEA5B5D0AE | CC                            | int3                                    |
+00007FFEA5B5D0AF | CC                            | int3                                    |

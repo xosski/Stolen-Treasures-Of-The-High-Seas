@@ -1,0 +1,19 @@
+00007FFEA5AD87B0 | 48:895C24 10                  | mov qword ptr ss:[rsp+10],rbx           |
+00007FFEA5AD87B5 | 48:896C24 18                  | mov qword ptr ss:[rsp+18],rbp           |
+00007FFEA5AD87BA | 48:897424 20                  | mov qword ptr ss:[rsp+20],rsi           |
+00007FFEA5AD87BF | 57                            | push rdi                                |
+00007FFEA5AD87C0 | 48:83EC 30                    | sub rsp,30                              |
+00007FFEA5AD87C4 | 33ED                          | xor ebp,ebp                             |
+00007FFEA5AD87C6 | 48:8BF2                       | mov rsi,rdx                             | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD87C9 | 8BDD                          | mov ebx,ebp                             |
+00007FFEA5AD87CB | 48:8BF9                       | mov rdi,rcx                             | rcx:NtQueryInformationThread+14
+00007FFEA5AD87CE | 3959 2C                       | cmp dword ptr ds:[rcx+2C],ebx           | rcx+2C:ZwSetInformationFile
+00007FFEA5AD87D1 | 0F84 B7000000                 | je ntdll.7FFEA5AD888E                   |
+00007FFEA5AD87D7 | 48:8B59 10                    | mov rbx,qword ptr ds:[rcx+10]           | rbx:"LdrpInitializeProcess", rcx+10:NtOpenProcess+4
+00007FFEA5AD87DB | 4C:897424 40                  | mov qword ptr ss:[rsp+40],r14           | [rsp+40]:"Wow64PrepareForDebuggerAttach"
+00007FFEA5AD87E0 | 4C:8D35 698E0300              | lea r14,qword ptr ds:[<RtlCompareUnicod |
+00007FFEA5AD87E7 | 66:0F1F8400 00000000          | nop word ptr ds:[rax+rax],ax            |
+00007FFEA5AD87F0 | 48:8B47 48                    | mov rax,qword ptr ds:[rdi+48]           |
+00007FFEA5AD87F4 | 4C:8D43 20                    | lea r8,qword ptr ds:[rbx+20]            | rbx+20:"Initializing the execution options for the process %lx failed with status 0x%08lx\n"
+00007FFEA5AD87F8 | 49:3BC6                       | cmp rax,r14                             |
+00007FFEA5AD87FB | 0F85 80000000                 | jne ntdll.7FFEA5AD8881                  |

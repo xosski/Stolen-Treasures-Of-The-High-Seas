@@ -1,0 +1,111 @@
+00007FFEA5AD8ABC | 48:895C24 08                  | mov qword ptr ss:[rsp+8],rbx            | [rsp+08]:RtlQueryElevationFlags+241
+00007FFEA5AD8AC1 | 48:896C24 10                  | mov qword ptr ss:[rsp+10],rbp           |
+00007FFEA5AD8AC6 | 48:897424 18                  | mov qword ptr ss:[rsp+18],rsi           |
+00007FFEA5AD8ACB | 57                            | push rdi                                |
+00007FFEA5AD8ACC | 41:54                         | push r12                                |
+00007FFEA5AD8ACE | 41:55                         | push r13                                |
+00007FFEA5AD8AD0 | 41:56                         | push r14                                |
+00007FFEA5AD8AD2 | 41:57                         | push r15                                |
+00007FFEA5AD8AD4 | 48:83EC 30                    | sub rsp,30                              |
+00007FFEA5AD8AD8 | 33DB                          | xor ebx,ebx                             |
+00007FFEA5AD8ADA | 44:8AE2                       | mov r12b,dl                             |
+00007FFEA5AD8ADD | 48:8BE9                       | mov rbp,rcx                             | rcx:NtQueryInformationThread+14
+00007FFEA5AD8AE0 | 48:3999 B0000000              | cmp qword ptr ds:[rcx+B0],rbx           | rcx+B0:ZwReplyWaitReceivePortEx+4, rbx:"LdrpInitializeProcess"
+00007FFEA5AD8AE7 | 0F85 64010000                 | jne ntdll.7FFEA5AD8C51                  |
+00007FFEA5AD8AED | F741 20 00001004              | test dword ptr ds:[rcx+20],4100000      | rcx+20:NtOpenProcess+14
+00007FFEA5AD8AF4 | 0F85 57010000                 | jne ntdll.7FFEA5AD8C51                  |
+00007FFEA5AD8AFA | 4C:8B79 38                    | mov r15,qword ptr ds:[rcx+38]           | rcx+38:NtSetInformationFile+C
+00007FFEA5AD8AFE | 48:8D0D 9B8B1300              | lea rcx,qword ptr ds:[7FFEA5C116A0]     | rcx:NtQueryInformationThread+14
+00007FFEA5AD8B05 | E8 164BF8FF                   | call <ntdll.RtlEnterCriticalSection>    |
+00007FFEA5AD8B0A | 48:8B05 CF8A1300              | mov rax,qword ptr ds:[7FFEA5C115E0]     |
+00007FFEA5AD8B11 | 4C:8D2D C08A1300              | lea r13,qword ptr ds:[7FFEA5C115D8]     |
+00007FFEA5AD8B18 | 48:8B3D B98A1300              | mov rdi,qword ptr ds:[7FFEA5C115D8]     |
+00007FFEA5AD8B1F | A8 01                         | test al,1                               |
+00007FFEA5AD8B21 | 0F85 57010000                 | jne ntdll.7FFEA5AD8C7E                  |
+00007FFEA5AD8B27 | 48:8BF7                       | mov rsi,rdi                             | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8B2A | 44:0FB6F0                     | movzx r14d,al                           |
+00007FFEA5AD8B2E | 41:83E6 01                    | and r14d,1                              |
+00007FFEA5AD8B32 | 48:85F6                       | test rsi,rsi                            | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8B35 | 74 5E                         | je ntdll.7FFEA5AD8B95                   |
+00007FFEA5AD8B37 | 8B46 28                       | mov eax,dword ptr ds:[rsi+28]           | rsi+28:" engine exports failed with status 0x%08lx\n"
+00007FFEA5AD8B3A | 41:2B87 08010000              | sub eax,dword ptr ds:[r15+108]          |
+00007FFEA5AD8B41 | 75 27                         | jne ntdll.7FFEA5AD8B6A                  |
+00007FFEA5AD8B43 | 45:0FB74F 48                  | movzx r9d,word ptr ds:[r15+48]          |
+00007FFEA5AD8B48 | 0FB796 68FFFFFF               | movzx edx,word ptr ds:[rsi-98]          | rsi-98:"or(0x%lx): No Valid Win32 Error Mapping\n"
+00007FFEA5AD8B4F | 4D:8B47 50                    | mov r8,qword ptr ds:[r15+50]            |
+00007FFEA5AD8B53 | 48:8B8E 70FFFFFF              | mov rcx,qword ptr ds:[rsi-90]           | rcx:NtQueryInformationThread+14, rsi-90:"): No Valid Win32 Error Mapping\n"
+00007FFEA5AD8B5A | 49:D1E9                       | shr r9,1                                |
+00007FFEA5AD8B5D | 48:D1EA                       | shr rdx,1                               |
+00007FFEA5AD8B60 | C64424 20 01                  | mov byte ptr ss:[rsp+20],1              |
+00007FFEA5AD8B65 | E8 56010000                   | call <ntdll.RtlCompareUnicodeStrings>   |
+00007FFEA5AD8B6A | 85C0                          | test eax,eax                            |
+00007FFEA5AD8B6C | 79 6B                         | jns ntdll.7FFEA5AD8BD9                  |
+00007FFEA5AD8B6E | 48:8B06                       | mov rax,qword ptr ds:[rsi]              | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8B71 | 45:85F6                       | test r14d,r14d                          |
+00007FFEA5AD8B74 | 75 6B                         | jne ntdll.7FFEA5AD8BE1                  |
+00007FFEA5AD8B76 | 48:8BF0                       | mov rsi,rax                             | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8B79 | 48:85F6                       | test rsi,rsi                            | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8B7C | 75 B9                         | jne ntdll.7FFEA5AD8B37                  |
+00007FFEA5AD8B7E | 48:85F6                       | test rsi,rsi                            | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8B81 | 0F85 88000000                 | jne ntdll.7FFEA5AD8C0F                  |
+00007FFEA5AD8B87 | 48:8B05 528A1300              | mov rax,qword ptr ds:[7FFEA5C115E0]     |
+00007FFEA5AD8B8E | 48:8B3D 438A1300              | mov rdi,qword ptr ds:[7FFEA5C115D8]     |
+00007FFEA5AD8B95 | 45:84E4                       | test r12b,r12b                          |
+00007FFEA5AD8B98 | 0F84 A7000000                 | je ntdll.7FFEA5AD8C45                   |
+00007FFEA5AD8B9E | A8 01                         | test al,1                               |
+00007FFEA5AD8BA0 | 0F85 E8000000                 | jne ntdll.7FFEA5AD8C8E                  |
+00007FFEA5AD8BA6 | 0FB6F0                        | movzx esi,al                            |
+00007FFEA5AD8BA9 | 83E6 01                       | and esi,1                               |
+00007FFEA5AD8BAC | 48:85FF                       | test rdi,rdi                            |
+00007FFEA5AD8BAF | 74 49                         | je ntdll.7FFEA5AD8BFA                   |
+00007FFEA5AD8BB1 | 48:8BD7                       | mov rdx,rdi                             |
+00007FFEA5AD8BB4 | 49:8BCF                       | mov rcx,r15                             | rcx:NtQueryInformationThread+14
+00007FFEA5AD8BB7 | E8 78050000                   | call ntdll.7FFEA5AD9134                 |
+00007FFEA5AD8BBC | 85C0                          | test eax,eax                            |
+00007FFEA5AD8BBE | 79 2B                         | jns ntdll.7FFEA5AD8BEB                  |
+00007FFEA5AD8BC0 | 48:8B07                       | mov rax,qword ptr ds:[rdi]              |
+00007FFEA5AD8BC3 | 85F6                          | test esi,esi                            |
+00007FFEA5AD8BC5 | 74 08                         | je ntdll.7FFEA5AD8BCF                   |
+00007FFEA5AD8BC7 | 48:85C0                       | test rax,rax                            |
+00007FFEA5AD8BCA | 74 2E                         | je ntdll.7FFEA5AD8BFA                   |
+00007FFEA5AD8BCC | 48:33C7                       | xor rax,rdi                             |
+00007FFEA5AD8BCF | 48:85C0                       | test rax,rax                            |
+00007FFEA5AD8BD2 | 74 26                         | je ntdll.7FFEA5AD8BFA                   |
+00007FFEA5AD8BD4 | 48:8BF8                       | mov rdi,rax                             |
+00007FFEA5AD8BD7 | EB D8                         | jmp ntdll.7FFEA5AD8BB1                  |
+00007FFEA5AD8BD9 | 7E A3                         | jle ntdll.7FFEA5AD8B7E                  |
+00007FFEA5AD8BDB | 48:8B46 08                    | mov rax,qword ptr ds:[rsi+8]            | rsi+08:"l\\ldr\\ldrinit.c"
+00007FFEA5AD8BDF | EB 90                         | jmp ntdll.7FFEA5AD8B71                  |
+00007FFEA5AD8BE1 | 48:85C0                       | test rax,rax                            |
+00007FFEA5AD8BE4 | 74 90                         | je ntdll.7FFEA5AD8B76                   |
+00007FFEA5AD8BE6 | 48:33F0                       | xor rsi,rax                             | rsi:"minkernel\\ldr\\ldrinit.c"
+00007FFEA5AD8BE9 | EB 8E                         | jmp ntdll.7FFEA5AD8B79                  |
+00007FFEA5AD8BEB | 48:8B47 08                    | mov rax,qword ptr ds:[rdi+8]            |
+00007FFEA5AD8BEF | 85F6                          | test esi,esi                            |
+00007FFEA5AD8BF1 | 75 7E                         | jne ntdll.7FFEA5AD8C71                  |
+00007FFEA5AD8BF3 | 48:85C0                       | test rax,rax                            |
+00007FFEA5AD8BF6 | 75 DC                         | jne ntdll.7FFEA5AD8BD4                  |
+00007FFEA5AD8BF8 | B3 01                         | mov bl,1                                |
+00007FFEA5AD8BFA | 4D:8D8F E0000000              | lea r9,qword ptr ds:[r15+E0]            |
+00007FFEA5AD8C01 | 44:8AC3                       | mov r8b,bl                              |
+00007FFEA5AD8C04 | 48:8BD7                       | mov rdx,rdi                             |
+00007FFEA5AD8C07 | 49:8BCD                       | mov rcx,r13                             | rcx:NtQueryInformationThread+14
+00007FFEA5AD8C0A | E8 F148FBFF                   | call <ntdll.RtlRbInsertNodeEx>          |
+00007FFEA5AD8C0F | 0FBA6D 20 14                  | bts dword ptr ss:[rbp+20],14            |
+00007FFEA5AD8C14 | 48:8D15 558A1300              | lea rdx,qword ptr ds:[7FFEA5C11670]     |
+00007FFEA5AD8C1B | 48:8B0D 568A1300              | mov rcx,qword ptr ds:[7FFEA5C11678]     | rcx:NtQueryInformationThread+14
+00007FFEA5AD8C22 | 48:8D45 40                    | lea rax,qword ptr ss:[rbp+40]           |
+00007FFEA5AD8C26 | B3 01                         | mov bl,1                                |
+00007FFEA5AD8C28 | 48:3911                       | cmp qword ptr ds:[rcx],rdx              | rcx:NtQueryInformationThread+14
+00007FFEA5AD8C2B | 74 07                         | je ntdll.7FFEA5AD8C34                   |
+00007FFEA5AD8C2D | B9 03000000                   | mov ecx,3                               |
+00007FFEA5AD8C32 | CD 29                         | int 29                                  |
+00007FFEA5AD8C34 | 48:8910                       | mov qword ptr ds:[rax],rdx              |
+00007FFEA5AD8C37 | 48:8948 08                    | mov qword ptr ds:[rax+8],rcx            | rcx:NtQueryInformationThread+14
+00007FFEA5AD8C3B | 48:8901                       | mov qword ptr ds:[rcx],rax              | rcx:NtQueryInformationThread+14
+00007FFEA5AD8C3E | 48:8905 338A1300              | mov qword ptr ds:[7FFEA5C11678],rax     |
+00007FFEA5AD8C45 | 48:8D0D 548A1300              | lea rcx,qword ptr ds:[7FFEA5C116A0]     | rcx:NtQueryInformationThread+14
+00007FFEA5AD8C4C | E8 CF4AF8FF                   | call <ntdll.RtlLeaveCriticalSection>    |
+00007FFEA5AD8C51 | 48:8B6C24 68                  | mov rbp,qword ptr ss:[rsp+68]           | [rsp+68]:L" \""
+00007FFEA5AD8C56 | 8AC3                          | mov al,bl                               |
+00007FFEA5AD8C58 | 48:8B5C24 60                  | mov rbx,qword ptr ss:[rsp+60]           | [rsp+60]:"Beginning execution of %wZ (%wZ)\n\tCurrent directory: %wZ\n\tPackage directories: %wZ\n"
